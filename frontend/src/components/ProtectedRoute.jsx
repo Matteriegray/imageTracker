@@ -6,25 +6,10 @@ const ProtectedRoute = ({ children }) => {
 
   if (isLoading) {
     return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '100vh',
-        background: '#0a0b0f',
-        color: '#9ca3af'
-      }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{
-            width: '40px',
-            height: '40px',
-            border: '3px solid #2e303a',
-            borderTopColor: '#fbbf24',
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite',
-            margin: '0 auto 16px'
-          }}></div>
-          <p>Loading...</p>
+      <div className="flex justify-center items-center h-screen bg-[#0a0b0f]">
+        <div className="text-center">
+          <div className="w-10 h-10 border-3 border-[#2e303a] border-t-[#fbbf24] rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-400">Loading...</p>
         </div>
       </div>
     );

@@ -1,6 +1,5 @@
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import '../styles/Layout.css';
 
 const Layout = () => {
   const { currentUser, logout } = useAuth();
@@ -13,53 +12,68 @@ const Layout = () => {
   };
 
   return (
-    <div className="app-layout">
-      <header className="app-header">
-        <div className="header-content">
-          <div className="header-left">
-            <Link to="/dashboard" className="logo-link">
-              <div className="evidence-marker-small">
-                <span className="marker-number">1</span>
-              </div>
-              <span className="app-title">SceneMap</span>
-            </Link>
-          </div>
+    <div className="min-h-screen flex flex-col bg-[#0a0b0f]">
+      {/* Header */}
+      <header className="bg-[#16171d] border-b border-[#2e303a] sticky top-0 z-50 shadow-lg">
+        <div className="max-w-7xl mx-auto px-6 h-18 flex items-center justify-between gap-8">
+          {/* Logo */}
+          <Link to="/dashboard" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+            <div className="evidence-marker w-9 h-9">
+              <span className="text-lg font-bold text-[#0a0b0f]">1</span>
+            </div>
+            <span className="text-2xl font-bold text-gray-100 tracking-tight">SceneMap</span>
+          </Link>
 
-          <nav className="header-nav">
-            <Link 
-              to="/dashboard" 
-              className={location.pathname === '/dashboard' ? 'nav-link active' : 'nav-link'}
+          {/* Navigation */}
+          <nav className="hidden md:flex items-center gap-2 flex-1">
+            <Link
+              to="/dashboard"
+              className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                location.pathname === '/dashboard'
+                  ? 'bg-[#fbbf24]/10 text-[#fbbf24]'
+                  : 'text-gray-400 hover:bg-[#1f2028] hover:text-gray-300'
+              }`}
             >
               Dashboard
             </Link>
-            <a href="#" className="nav-link">Cases</a>
-            <a href="#" className="nav-link">Timeline</a>
+            <a href="#" className="px-4 py-2 text-gray-400 hover:bg-[#1f2028] hover:text-gray-300 rounded-lg font-medium transition-all">
+              Cases
+            </a>
+            <a href="#" className="px-4 py-2 text-gray-400 hover:bg-[#1f2028] hover:text-gray-300 rounded-lg font-medium transition-all">
+              Timeline
+            </a>
           </nav>
 
-          <div className="header-right">
-            <div className="user-info">
-              <span className="user-name">{currentUser?.name}</span>
-              <span className="user-badge">{currentUser?.badge}</span>
+          {/* User Info & Logout */}
+          <div className="flex items-center gap-4">
+            <div className="hidden sm:flex flex-col items-end">
+              <span className="text-sm font-semibold text-gray-100">{currentUser?.name}</span>
+              <span className="text-xs text-gray-500">{currentUser?.badge}</span>
             </div>
-            <button onClick={handleLogout} className="logout-button">
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 px-4 py-2 bg-[#1f2028] border border-[#2e303a] hover:bg-[#2e303a] hover:border-[#fbbf24]/30 text-gray-300 rounded-lg font-medium transition-all"
+            >
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
                 <path d="M7 13L3 9L7 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                 <path d="M3 9H11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
                 <path d="M11 3H14C14.5523 3 15 3.44772 15 4V14C15 14.5523 14.5523 15 14 15H11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
               </svg>
-              Logout
+              <span className="hidden sm:inline">Logout</span>
             </button>
           </div>
         </div>
       </header>
 
-      <main className="app-main">
+      {/* Main Content */}
+      <main className="flex-1">
         <Outlet />
       </main>
 
-      <footer className="app-footer">
-        <p>&copy; 2026 SceneMap - Interactive Field Evidence Logger</p>
-        <p className="footer-note">Authorized Law Enforcement Use Only</p>
+      {/* Footer */}
+      <footer className="bg-[#16171d] border-t border-[#2e303a] py-6 text-center">
+        <p className="text-sm text-gray-500">&copy; 2026 SceneMap - Interactive Field Evidence Logger</p>
+        <p className="text-xs text-gray-600 mt-1">Authorized Law Enforcement Use Only</p>
       </footer>
     </div>
   );
