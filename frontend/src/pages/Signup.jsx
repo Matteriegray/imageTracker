@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import '../styles/Signup.css';
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -66,54 +65,63 @@ const Signup = () => {
   };
 
   return (
-    <div className="signup-container">
-      <div className="signup-card">
-        <div className="signup-header">
-          <div className="logo-section">
-            <div className="evidence-marker">
-              <span className="marker-number">★</span>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0a0b0f] to-gray-900 p-8">
+      <div className="bg-[#16171d] border border-[#2e303a] rounded-xl p-12 w-full max-w-2xl shadow-2xl">
+        {/* Header */}
+        <div className="text-center mb-10">
+          <div className="flex items-center justify-center gap-3 mb-3">
+            <div className="evidence-marker w-12 h-12">
+              <span className="text-2xl font-bold text-[#0a0b0f]">★</span>
             </div>
-            <h1>Join SceneMap</h1>
+            <h1 className="text-3xl font-bold text-gray-100 tracking-tight">Join SceneMap</h1>
           </div>
-          <p className="tagline">Register as a Field Officer</p>
+          <p className="text-gray-400 text-sm">Register as a Field Officer</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="signup-form">
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="fullName">Full Name *</label>
-              <input
-                id="fullName"
-                name="fullName"
-                type="text"
-                value={formData.fullName}
-                onChange={handleChange}
-                placeholder="John Doe"
-                disabled={isLoading}
-                autoComplete="name"
-              />
-            </div>
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Full Name */}
+          <div>
+            <label htmlFor="fullName" className="block text-sm font-medium text-gray-300 mb-2">
+              Full Name <span className="text-red-400">*</span>
+            </label>
+            <input
+              id="fullName"
+              name="fullName"
+              type="text"
+              value={formData.fullName}
+              onChange={handleChange}
+              placeholder="John Doe"
+              disabled={isLoading}
+              autoComplete="name"
+              className="w-full bg-[#1f2028] border border-[#2e303a] rounded-lg px-4 py-3 text-gray-100 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-[#fbbf24] focus:border-transparent transition-all disabled:opacity-50"
+            />
           </div>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="email">Officer Email *</label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                value={formData.email}
-                onChange={handleChange}
-                placeholder="officer@department.gov"
-                disabled={isLoading}
-                autoComplete="email"
-              />
-            </div>
+          {/* Email */}
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
+              Officer Email <span className="text-red-400">*</span>
+            </label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              value={formData.email}
+              onChange={handleChange}
+              placeholder="officer@department.gov"
+              disabled={isLoading}
+              autoComplete="email"
+              className="w-full bg-[#1f2028] border border-[#2e303a] rounded-lg px-4 py-3 text-gray-100 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-[#fbbf24] focus:border-transparent transition-all disabled:opacity-50"
+            />
           </div>
 
-          <div className="form-row two-column">
-            <div className="form-group">
-              <label htmlFor="badgeNumber">Badge Number</label>
+          {/* Badge & Department */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="badgeNumber" className="block text-sm font-medium text-gray-300 mb-2">
+                Badge Number
+              </label>
               <input
                 id="badgeNumber"
                 name="badgeNumber"
@@ -122,11 +130,14 @@ const Signup = () => {
                 onChange={handleChange}
                 placeholder="OFC-482"
                 disabled={isLoading}
+                className="w-full bg-[#1f2028] border border-[#2e303a] rounded-lg px-4 py-3 text-gray-100 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-[#fbbf24] focus:border-transparent transition-all disabled:opacity-50"
               />
             </div>
 
-            <div className="form-group">
-              <label htmlFor="department">Department</label>
+            <div>
+              <label htmlFor="department" className="block text-sm font-medium text-gray-300 mb-2">
+                Department
+              </label>
               <input
                 id="department"
                 name="department"
@@ -135,13 +146,17 @@ const Signup = () => {
                 onChange={handleChange}
                 placeholder="Metro PD"
                 disabled={isLoading}
+                className="w-full bg-[#1f2028] border border-[#2e303a] rounded-lg px-4 py-3 text-gray-100 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-[#fbbf24] focus:border-transparent transition-all disabled:opacity-50"
               />
             </div>
           </div>
 
-          <div className="form-row two-column">
-            <div className="form-group">
-              <label htmlFor="password">Password *</label>
+          {/* Password & Confirm */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
+                Password <span className="text-red-400">*</span>
+              </label>
               <input
                 id="password"
                 name="password"
@@ -151,11 +166,14 @@ const Signup = () => {
                 placeholder="Min. 6 characters"
                 disabled={isLoading}
                 autoComplete="new-password"
+                className="w-full bg-[#1f2028] border border-[#2e303a] rounded-lg px-4 py-3 text-gray-100 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-[#fbbf24] focus:border-transparent transition-all disabled:opacity-50"
               />
             </div>
 
-            <div className="form-group">
-              <label htmlFor="confirmPassword">Confirm Password *</label>
+            <div>
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-300 mb-2">
+                Confirm Password <span className="text-red-400">*</span>
+              </label>
               <input
                 id="confirmPassword"
                 name="confirmPassword"
@@ -165,13 +183,15 @@ const Signup = () => {
                 placeholder="Re-enter password"
                 disabled={isLoading}
                 autoComplete="new-password"
+                className="w-full bg-[#1f2028] border border-[#2e303a] rounded-lg px-4 py-3 text-gray-100 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-[#fbbf24] focus:border-transparent transition-all disabled:opacity-50"
               />
             </div>
           </div>
 
+          {/* Error Message */}
           {error && (
-            <div className="error-message">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/30 rounded-lg p-3 text-red-400 text-sm">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="flex-shrink-0">
                 <path d="M8 14C11.3137 14 14 11.3137 14 8C14 4.68629 11.3137 2 8 2C4.68629 2 2 4.68629 2 8C2 11.3137 4.68629 14 8 14Z" stroke="currentColor" strokeWidth="1.5"/>
                 <path d="M8 5V8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
                 <circle cx="8" cy="10.5" r="0.5" fill="currentColor"/>
@@ -180,14 +200,15 @@ const Signup = () => {
             </div>
           )}
 
+          {/* Submit Button */}
           <button 
             type="submit" 
-            className="submit-button"
             disabled={isLoading}
+            className="w-full bg-[#fbbf24] hover:bg-[#f59e0b] text-[#0a0b0f] font-semibold py-3 px-6 rounded-lg transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg hover:shadow-[#fbbf24]/30 hover:-translate-y-0.5 mt-2"
           >
             {isLoading ? (
               <>
-                <span className="spinner"></span>
+                <div className="w-4 h-4 border-2 border-[#0a0b0f] border-t-transparent rounded-full animate-spin" />
                 Creating Account...
               </>
             ) : (
@@ -196,9 +217,15 @@ const Signup = () => {
           </button>
         </form>
 
-        <div className="signup-footer">
-          <p>Already have an account? <Link to="/login" className="login-link">Sign In</Link></p>
-          <p className="authorization-note">Authorized Personnel Only</p>
+        {/* Footer */}
+        <div className="mt-8 pt-6 border-t border-[#2e303a] text-center space-y-2">
+          <p className="text-sm text-gray-500">
+            Already have an account?{' '}
+            <Link to="/login" className="text-[#fbbf24] hover:text-[#f59e0b] font-semibold transition-colors">
+              Sign In
+            </Link>
+          </p>
+          <p className="text-xs text-gray-600">Authorized Personnel Only</p>
         </div>
       </div>
     </div>
