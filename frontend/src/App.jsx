@@ -6,6 +6,7 @@ import Dashboard from './pages/Dashboard';
 import Cases from './pages/Cases';
 import CreateCase from './pages/CreateCase';
 import CaseDetail from './pages/CaseDetail';
+import Evidence from './pages/Evidence';
 import Timeline from './pages/Timeline';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -30,6 +31,7 @@ function App() {
             <Route path="cases" element={<Cases />} />
             <Route path="cases/new" element={<CreateCase />} />
             <Route path="cases/:id" element={<CaseDetail />} />
+            <Route path="cases/:caseId/evidence" element={<Evidence />} />
             <Route path="timeline" element={<Timeline />} />
           </Route>
         </Routes>

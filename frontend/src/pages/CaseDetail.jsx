@@ -143,6 +143,12 @@ const CaseDetail = () => {
             </button>
           )}
           <button
+            onClick={() => navigate(`/cases/${caseDetail._id}/evidence`)}
+            className="px-5 py-3 bg-purple-500 hover:bg-purple-600 text-white font-semibold rounded-lg transition-all"
+          >
+            Evidence & Relationships
+          </button>
+          <button
             onClick={() => navigate(-1)}
             className="px-5 py-3 bg-[#fbbf24] hover:bg-[#f59e0b] text-[#0a0b0f] font-semibold rounded-lg transition-all"
           >
