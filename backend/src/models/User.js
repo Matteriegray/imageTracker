@@ -17,6 +17,15 @@ const UserSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  resetPasswordToken: {
+    type: String,
+    trim: true,
+    default: null
+  },
+  resetPasswordExpires: {
+    type: Date,
+    default: null
+  },
   badgeNumber: {
     type: String,
     trim: true

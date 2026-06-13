@@ -138,6 +138,11 @@ const Login = () => {
               Create Account
             </Link>
           </p>
+          <p className="text-sm text-gray-500">
+            <Link to="/forgot-password" className="text-[#fbbf24] hover:text-[#f59e0b] font-semibold transition-colors">
+              Forgot password?
+            </Link>
+          </p>
           <p className="text-xs text-gray-600">Authorized Personnel Only</p>
           <p className="text-xs text-gray-500 italic">Demo: Use any email/password to login</p>
         </div>
