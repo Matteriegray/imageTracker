@@ -8,8 +8,8 @@ const router = express.Router();
 
 router.post('/signup', async (req, res) => {
   try {
-    const { name, email, password } = req.body;
-    if (!name || !email || !password) {
+    const { fullName, email, password, badgeNumber, department } = req.body;
+    if (!fullName || !email || !password) {
       return res.status(400).json({ message: 'Name, email, and password are required' });
     }
 
@@ -19,10 +19,42 @@ router.post('/signup', async (req, res) => {
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
-    const user = new User({ name, email: email.toLowerCase(), passwordHash });
+    const user = new User({
+      name: fullName,
+      email: email.toLowerCase(),
+      passwordHash,
+      badgeNumber,
+      department,
+      role: 'Officer'
+    });
     await user.save();
 
-    return res.status(201).json({ message: 'User created successfully' });
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+      throw new Error('JWT_SECRET is not defined in .env');
+    }
+
+    const token = jwt.sign(
+      {
+        id: user._id,
+        email: user.email,
+        name: user.name
+      },
+      secret,
+      { expiresIn: '8h' }
+    );
+
+    return res.status(201).json({
+      token,
+      user: {
+        id: user._id,
+        email: user.email,
+        name: user.name,
+        badgeNumber: user.badgeNumber,
+        department: user.department,
+        role: user.role
+      }
+    });
   } catch (error) {
     console.error('Signup error:', error);
     return res.status(500).json({ message: 'Unable to create user' });
@@ -61,7 +93,17 @@ router.post('/login', async (req, res) => {
       { expiresIn: '8h' }
     );
 
-    return res.json({ token, user: { id: user._id, email: user.email, name: user.name } });
+    return res.json({
+      token,
+      user: {
+        id: user._id,
+        email: user.email,
+        name: user.name,
+        badgeNumber: user.badgeNumber,
+        department: user.department,
+        role: user.role
+      }
+    });
   } catch (error) {
     console.error('Login error:', error);
     return res.status(500).json({ message: 'Unable to login' });

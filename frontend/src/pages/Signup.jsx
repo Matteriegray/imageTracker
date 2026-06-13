@@ -51,11 +51,11 @@ const Signup = () => {
     setIsLoading(true);
 
     try {
-      const result = signup(formData);
+      const result = await signup(formData);
       if (result.success) {
         navigate('/dashboard');
       } else {
-        setError('Signup failed. Please try again.');
+        setError(result.message || 'Signup failed. Please try again.');
       }
     } catch (err) {
       setError('An error occurred. Please try again.');

@@ -1,9 +1,71 @@
+import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { useCases } from '../hooks/useCases';
 
 const Dashboard = () => {
+  const [showPhotoModal, setShowPhotoModal] = useState(false);
   const { currentUser } = useAuth();
   const navigate = useNavigate();
+  const { cases, loading } = useCases();
+
+  const activeCount = cases.filter((c) => c.status === 'active').length;
+  const evidenceCount = cases.reduce((sum, c) => sum + (c.evidenceCount || 0), 0);
+  const photoCases = cases.filter((c) => !!c.sceneImageUrl);
+  const scenePhotoCount = photoCases.length;
+
+  const activityItems = cases
+    .flatMap((caseItem) => {
+      const events = [];
+      const timestamp = caseItem.createdAt ? new Date(caseItem.createdAt).toISOString() : null;
+
+      if (timestamp) {
+        events.push({
+          id: `${caseItem._id}-created`,
+          title: 'Case Created',
+          description: `New case "${caseItem.title}" was created`,
+          user: caseItem.createdByName || currentUser?.name || 'Officer',
+          timestamp,
+          icon: '📋',
+          color: 'blue'
+        });
+      }
+
+      if (caseItem.sceneImageName) {
+        events.push({
+          id: `${caseItem._id}-photo`,
+          title: 'Scene Photo Added',
+          description: `Photo "${caseItem.sceneImageName}" attached to ${caseItem.title}`,
+          user: caseItem.createdByName || currentUser?.name || 'Officer',
+          timestamp,
+          icon: '📸',
+          color: 'green'
+        });
+      }
+
+      if (caseItem.evidenceCount > 0) {
+        events.push({
+          id: `${caseItem._id}-evidence`,
+          title: 'Evidence Logged',
+          description: `${caseItem.evidenceCount} evidence item(s) recorded for ${caseItem.title}`,
+          user: caseItem.createdByName || currentUser?.name || 'Officer',
+          timestamp,
+          icon: '📍',
+          color: 'yellow'
+        });
+      }
+
+      return events;
+    })
+    .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+  const lastActivityText = loading
+    ? 'Loading...'
+    : activityItems.length === 0
+    ? 'No activity'
+    : `${activityItems[0].title}: ${new Date(activityItems[0].timestamp).toLocaleString()}`;
+
+  const recentActivity = activityItems.slice(0, 3);
 
   return (
     <div className="py-10 px-5 max-w-7xl mx-auto">
@@ -37,7 +99,7 @@ const Dashboard = () => {
             <h3 className="text-xs uppercase tracking-wider text-gray-500 font-medium mb-1">
               Active Cases
             </h3>
-            <p className="text-3xl font-bold text-gray-100">3</p>
+            <p className="text-3xl font-bold text-gray-100">{cases.filter((c) => c.status === 'active').length}</p>
           </div>
         </div>
 
@@ -50,12 +112,15 @@ const Dashboard = () => {
             <h3 className="text-xs uppercase tracking-wider text-gray-500 font-medium mb-1">
               Evidence Pins
             </h3>
-            <p className="text-3xl font-bold text-gray-100">27</p>
+            <p className="text-3xl font-bold text-gray-100">{cases.reduce((sum, c) => sum + (c.evidenceCount || 0), 0)}</p>
           </div>
         </div>
 
         {/* Scene Photos */}
-        <div className="bg-[#16171d] border border-[#2e303a] rounded-xl p-6 flex items-center gap-4 hover:border-[#fbbf24]/30 hover:-translate-y-1 transition-all duration-200 shadow-lg cursor-pointer group">
+        <div
+          onClick={() => setShowPhotoModal(true)}
+          className="bg-[#16171d] border border-[#2e303a] rounded-xl p-6 flex items-center gap-4 hover:border-[#fbbf24]/30 hover:-translate-y-1 transition-all duration-200 shadow-lg cursor-pointer group"
+        >
           <div className="text-4xl flex items-center justify-center w-14 h-14 bg-[#1f2028] rounded-xl group-hover:scale-110 transition-transform">
             📸
           </div>
@@ -63,7 +128,7 @@ const Dashboard = () => {
             <h3 className="text-xs uppercase tracking-wider text-gray-500 font-medium mb-1">
               Scene Photos
             </h3>
-            <p className="text-3xl font-bold text-gray-100">12</p>
+            <p className="text-3xl font-bold text-gray-100">{cases.filter((c) => !!c.sceneImageUrl).length}</p>
           </div>
         </div>
 
@@ -79,10 +144,64 @@ const Dashboard = () => {
             <h3 className="text-xs uppercase tracking-wider text-gray-500 font-medium mb-1">
               Last Activity
             </h3>
-            <p className="text-2xl font-bold text-gray-100">Just now</p>
+            <p className="text-2xl font-bold text-gray-100">{lastActivityText}</p>
           </div>
         </div>
       </div>
+
+      {/* Photo Modal */}
+      {showPhotoModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 py-8">
+          <div className="w-full max-w-5xl overflow-hidden rounded-3xl border border-[#2e303a] bg-[#0f1118] shadow-2xl">
+            <div className="flex items-center justify-between border-b border-[#2e303a] px-6 py-4">
+              <div>
+                <h2 className="text-xl font-semibold text-gray-100">Scene Photos</h2>
+                <p className="text-sm text-gray-400">Showing photos for cases with uploaded scene images.</p>
+              </div>
+              <button
+                onClick={() => setShowPhotoModal(false)}
+                className="rounded-full bg-[#16171d] px-4 py-2 text-sm font-medium text-gray-200 hover:bg-[#2e303a] transition-all"
+              >
+                Close
+              </button>
+            </div>
+            <div className="max-h-[70vh] overflow-y-auto p-6 space-y-6">
+              {photoCases.length === 0 ? (
+                <div className="rounded-3xl border border-dashed border-[#2e303a] bg-[#16171d] p-12 text-center text-gray-400">
+                  No scene photos available yet.
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                  {photoCases.map((caseItem) => (
+                    <div key={caseItem._id} className="overflow-hidden rounded-3xl border border-[#2e303a] bg-[#181a21] shadow-lg">
+                      <div className="p-5">
+                        <div className="flex items-center justify-between gap-4">
+                          <div>
+                            <h3 className="text-lg font-semibold text-gray-100">{caseItem.title}</h3>
+                            <p className="text-sm text-gray-400">{caseItem.location}</p>
+                          </div>
+                          <button
+                            onClick={() => navigate(`/cases/${caseItem._id}`)}
+                            className="text-sm font-medium text-[#fbbf24] hover:text-[#f59e0b]"
+                          >
+                            Open
+                          </button>
+                        </div>
+                        <p className="mt-3 text-sm text-gray-400">{caseItem.sceneImageName}</p>
+                      </div>
+                      <img
+                        src={caseItem.sceneImageUrl}
+                        alt={caseItem.sceneImageName || caseItem.title}
+                        className="h-72 w-full object-cover"
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Quick Actions */}
       <div className="bg-[#16171d] border border-[#2e303a] rounded-xl p-8 mb-8 shadow-lg">
@@ -131,34 +250,24 @@ const Dashboard = () => {
           </button>
         </div>
         
-        <div className="space-y-4">
-          <div className="flex items-start gap-4 p-4 bg-[#1f2028] rounded-lg">
-            <div className="text-2xl">📋</div>
-            <div className="flex-1">
-              <p className="text-gray-200 font-medium mb-1">Case Created</p>
-              <p className="text-sm text-gray-400">Burglary - Downtown Bank</p>
-              <p className="text-xs text-gray-500 mt-2">2 hours ago</p>
-            </div>
+        {recentActivity.length === 0 ? (
+          <div className="text-center py-16 bg-[#1f2028] rounded-xl border border-[#2e303a] text-gray-400">
+            No recent activity yet. Create a case to begin tracking work.
           </div>
-          
-          <div className="flex items-start gap-4 p-4 bg-[#1f2028] rounded-lg">
-            <div className="text-2xl">📍</div>
-            <div className="flex-1">
-              <p className="text-gray-200 font-medium mb-1">Evidence Added</p>
-              <p className="text-sm text-gray-400">15 evidence items logged</p>
-              <p className="text-xs text-gray-500 mt-2">3 hours ago</p>
-            </div>
+        ) : (
+          <div className="space-y-4">
+            {recentActivity.map((activity) => (
+              <div key={activity.id} className="flex items-start gap-4 p-4 bg-[#1f2028] rounded-lg">
+                <div className="text-2xl">{activity.icon}</div>
+                <div className="flex-1">
+                  <p className="text-gray-200 font-medium mb-1">{activity.title}</p>
+                  <p className="text-sm text-gray-400">{activity.description}</p>
+                  <p className="text-xs text-gray-500 mt-2">{new Date(activity.timestamp).toLocaleString()}</p>
+                </div>
+              </div>
+            ))}
           </div>
-          
-          <div className="flex items-start gap-4 p-4 bg-[#1f2028] rounded-lg">
-            <div className="text-2xl">📸</div>
-            <div className="flex-1">
-              <p className="text-gray-200 font-medium mb-1">Photo Uploaded</p>
-              <p className="text-sm text-gray-400">Scene panoramic view</p>
-              <p className="text-xs text-gray-500 mt-2">4 hours ago</p>
-            </div>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );

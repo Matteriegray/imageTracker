@@ -1,17 +1,17 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 
 const AuthContext = createContext(null);
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
 export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [authToken, setAuthToken] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load auth state from localStorage on mount
   useEffect(() => {
     const storedUser = localStorage.getItem('currentUser');
     const storedToken = localStorage.getItem('authToken');
-    
+
     if (storedUser && storedToken) {
       setCurrentUser(JSON.parse(storedUser));
       setAuthToken(storedToken);
@@ -19,49 +19,56 @@ export const AuthProvider = ({ children }) => {
     setIsLoading(false);
   }, []);
 
-  const login = (email, password) => {
-    // Mock authentication - replace with actual API call
-    // For demo purposes, accept any credentials
-    const mockUser = {
-      id: '1',
-      email: email,
-      name: email.split('@')[0],
-      role: 'Officer',
-      badge: 'OFC-' + Math.floor(Math.random() * 1000)
-    };
-    const mockToken = 'mock-jwt-token-' + Date.now();
+  const login = async (email, password) => {
+    try {
+      const response = await fetch(`${API_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, password })
+      });
 
-    setCurrentUser(mockUser);
-    setAuthToken(mockToken);
-    
-    // Persist to localStorage
-    localStorage.setItem('currentUser', JSON.stringify(mockUser));
-    localStorage.setItem('authToken', mockToken);
-    
-    return { success: true, user: mockUser };
+      const data = await response.json();
+      if (!response.ok) {
+        return { success: false, message: data.message || 'Invalid credentials' };
+      }
+
+      setCurrentUser(data.user);
+      setAuthToken(data.token);
+      localStorage.setItem('currentUser', JSON.stringify(data.user));
+      localStorage.setItem('authToken', data.token);
+
+      return { success: true, user: data.user };
+    } catch (error) {
+      return { success: false, message: 'Unable to connect to the server' };
+    }
   };
 
-  const signup = (formData) => {
-    // Mock signup - replace with actual API call
-    // For demo purposes, accept any data
-    const mockUser = {
-      id: 'user-' + Date.now(),
-      email: formData.email,
-      name: formData.fullName,
-      role: 'Officer',
-      badge: formData.badgeNumber || 'OFC-' + Math.floor(Math.random() * 1000),
-      department: formData.department || 'Metro PD'
-    };
-    const mockToken = 'mock-jwt-token-' + Date.now();
+  const signup = async (formData) => {
+    try {
+      const response = await fetch(`${API_URL}/api/auth/signup`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+      });
 
-    setCurrentUser(mockUser);
-    setAuthToken(mockToken);
-    
-    // Persist to localStorage
-    localStorage.setItem('currentUser', JSON.stringify(mockUser));
-    localStorage.setItem('authToken', mockToken);
-    
-    return { success: true, user: mockUser };
+      const data = await response.json();
+      if (!response.ok) {
+        return { success: false, message: data.message || 'Signup failed' };
+      }
+
+      setCurrentUser(data.user);
+      setAuthToken(data.token);
+      localStorage.setItem('currentUser', JSON.stringify(data.user));
+      localStorage.setItem('authToken', data.token);
+
+      return { success: true, user: data.user };
+    } catch (error) {
+      return { success: false, message: 'Unable to connect to the server' };
+    }
   };
 
   const logout = () => {
@@ -81,11 +88,7 @@ export const AuthProvider = ({ children }) => {
     isAuthenticated: !!currentUser
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => {

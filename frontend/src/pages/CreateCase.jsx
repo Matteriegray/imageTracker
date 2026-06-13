@@ -1,14 +1,19 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
 const CreateCase = () => {
   const navigate = useNavigate();
+  const { authToken } = useAuth();
   const [formData, setFormData] = useState({
     title: '',
     location: '',
     description: '',
     priority: 'medium',
-    sceneImage: null
+    sceneImage: null,
+    sceneImagePreview: null
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -23,22 +28,63 @@ const CreateCase = () => {
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setFormData(prev => ({
-        ...prev,
-        sceneImage: file
-      }));
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData(prev => ({
+          ...prev,
+          sceneImage: file,
+          sceneImagePreview: reader.result
+        }));
+      };
+      reader.readAsDataURL(file);
     }
   };
 
-  const handleSubmit = (e) => {
+  const fileToDataUrl = (file) =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      setIsSubmitting(false);
+    try {
+      let sceneImageUrl = formData.sceneImagePreview;
+      if (formData.sceneImage && !sceneImageUrl) {
+        sceneImageUrl = await fileToDataUrl(formData.sceneImage);
+      }
+
+      const response = await fetch(`${API_URL}/api/cases`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${authToken}`
+        },
+        body: JSON.stringify({
+          title: formData.title,
+          location: formData.location,
+          description: formData.description,
+          priority: formData.priority,
+          sceneImageName: formData.sceneImage?.name || null,
+          sceneImageUrl: sceneImageUrl || null
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Unable to create case');
+      }
+
       navigate('/cases');
-    }, 1500);
+    } catch (error) {
+      console.error('Create case error:', error);
+      alert('Unable to create case. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -127,14 +173,18 @@ const CreateCase = () => {
           <p className="text-sm text-gray-400 mb-4">Upload a top-down or wide-angle photo of the crime scene</p>
           
           <div className="border-2 border-dashed border-[#2e303a] rounded-xl p-8 text-center hover:border-[#fbbf24]/50 transition-all">
-            {formData.sceneImage ? (
-              <div className="space-y-3">
-                <div className="text-5xl">📸</div>
-                <p className="text-gray-300 font-medium">{formData.sceneImage.name}</p>
-                <p className="text-sm text-gray-500">{(formData.sceneImage.size / 1024).toFixed(2)} KB</p>
+            {formData.sceneImagePreview ? (
+              <div className="space-y-4">
+                <img
+                  src={formData.sceneImagePreview}
+                  alt="Scene Preview"
+                  className="mx-auto h-56 w-full max-w-xl object-cover rounded-xl border border-[#2e303a]"
+                />
+                <div className="text-gray-300 font-medium">{formData.sceneImage.name}</div>
+                <div className="text-sm text-gray-500">{(formData.sceneImage.size / 1024).toFixed(2)} KB</div>
                 <button
                   type="button"
-                  onClick={() => setFormData(prev => ({ ...prev, sceneImage: null }))}
+                  onClick={() => setFormData(prev => ({ ...prev, sceneImage: null, sceneImagePreview: null }))}
                   className="text-sm text-red-400 hover:text-red-300"
                 >
                   Remove

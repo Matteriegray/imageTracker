@@ -17,6 +17,19 @@ const UserSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  badgeNumber: {
+    type: String,
+    trim: true
+  },
+  department: {
+    type: String,
+    trim: true
+  },
+  role: {
+    type: String,
+    trim: true,
+    default: 'Officer'
+  },
   createdAt: {
     type: Date,
     default: Date.now

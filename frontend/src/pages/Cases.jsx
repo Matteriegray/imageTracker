@@ -1,49 +1,58 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
 const Cases = () => {
-  const [cases, setCases] = useState([
-    {
-      id: 1,
-      caseNumber: 'CASE-2026-001',
-      title: 'Burglary - Downtown Bank',
-      location: '123 Main St, Downtown',
-      status: 'active',
-      priority: 'high',
-      evidenceCount: 15,
-      date: '2026-06-13',
-      officer: 'Officer Smith'
-    },
-    {
-      id: 2,
-      caseNumber: 'CASE-2026-002',
-      title: 'Hit and Run - Highway 5',
-      location: 'Highway 5, Mile Marker 42',
-      status: 'active',
-      priority: 'medium',
-      evidenceCount: 8,
-      date: '2026-06-12',
-      officer: 'Officer Johnson'
-    },
-    {
-      id: 3,
-      caseNumber: 'CASE-2026-003',
-      title: 'Vandalism - City Park',
-      location: 'Central Park, East Side',
-      status: 'closed',
-      priority: 'low',
-      evidenceCount: 4,
-      date: '2026-06-10',
-      officer: 'Officer Davis'
-    }
-  ]);
-
+  const { authToken } = useAuth();
+  const [cases, setCases] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [filter, setFilter] = useState('all'); // all, active, closed
+
+  useEffect(() => {
+    const loadCases = async () => {
+      try {
+        const response = await fetch(`${API_URL}/api/cases`, {
+          headers: {
+            Authorization: `Bearer ${authToken}`
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Unable to load cases');
+        }
+
+        const data = await response.json();
+        setCases(data);
+      } catch (err) {
+        console.error('Fetch cases error:', err);
+        setError('Unable to load cases. Please refresh.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (authToken) {
+      loadCases();
+    } else {
+      setLoading(false);
+    }
+  }, [authToken]);
 
   const filteredCases = cases.filter(c => {
     if (filter === 'all') return true;
     return c.status === filter;
   });
+
+  if (loading) {
+    return (
+      <div className="py-10 px-5 max-w-7xl mx-auto text-gray-300">
+        <p className="text-xl font-medium">Loading cases...</p>
+      </div>
+    );
+  }
 
   const getStatusColor = (status) => {
     return status === 'active' 
@@ -110,11 +119,17 @@ const Cases = () => {
         </button>
       </div>
 
+      {error && (
+        <div className="mb-6 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-300">
+          {error}
+        </div>
+      )}
+
       {/* Cases Grid */}
       <div className="grid grid-cols-1 gap-5">
         {filteredCases.map(caseItem => (
           <div
-            key={caseItem.id}
+            key={caseItem._id}
             className="bg-[#16171d] border border-[#2e303a] rounded-xl p-6 hover:border-[#fbbf24]/30 transition-all hover:-translate-y-1 shadow-lg"
           >
             <div className="flex items-start justify-between mb-4">
@@ -122,17 +137,17 @@ const Cases = () => {
                 <div className="flex items-center gap-3 mb-2">
                   <h3 className="text-xl font-bold text-gray-100">{caseItem.title}</h3>
                   <span className={`px-3 py-1 rounded-md text-xs font-medium border ${getStatusColor(caseItem.status)}`}>
-                    {caseItem.status.toUpperCase()}
+                    {caseItem.status?.toUpperCase()}
                   </span>
                   <span className={`px-3 py-1 rounded-md text-xs font-medium border ${getPriorityColor(caseItem.priority)}`}>
-                    {caseItem.priority.toUpperCase()}
+                    {caseItem.priority?.toUpperCase()}
                   </span>
                 </div>
                 <p className="text-sm text-gray-500 mb-1">Case #: {caseItem.caseNumber}</p>
                 <p className="text-sm text-gray-400">📍 {caseItem.location}</p>
               </div>
               <Link
-                to={`/cases/${caseItem.id}`}
+                to={`/cases/${caseItem._id}`}
                 className="px-4 py-2 bg-[#1f2028] hover:bg-[#2e303a] text-gray-300 rounded-lg text-sm font-medium transition-all"
               >
                 View Details
@@ -145,20 +160,20 @@ const Cases = () => {
                   <path d="M8 14C11.3137 14 14 11.3137 14 8C14 4.68629 11.3137 2 8 2C4.68629 2 2 4.68629 2 8C2 11.3137 4.68629 14 8 14Z" stroke="currentColor" strokeWidth="1.5"/>
                   <path d="M8 4V8L11 9.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
                 </svg>
-                {caseItem.date}
+                {caseItem.createdAt ? new Date(caseItem.createdAt).toLocaleDateString() : 'N/A'}
               </div>
               <div className="flex items-center gap-2 text-gray-400">
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                   <path d="M8 8C9.65685 8 11 6.65685 11 5C11 3.34315 9.65685 2 8 2C6.34315 2 5 3.34315 5 5C5 6.65685 6.34315 8 8 8Z" stroke="currentColor" strokeWidth="1.5"/>
                   <path d="M14 14C14 11.7909 11.3137 10 8 10C4.68629 10 2 11.7909 2 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
                 </svg>
-                {caseItem.officer}
+                {caseItem.createdByName || 'Officer'}
               </div>
               <div className="flex items-center gap-2 text-[#fbbf24]">
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                   <path d="M8 2L9.5 5L13 5.5L10.5 8L11 11.5L8 10L5 11.5L5.5 8L3 5.5L6.5 5L8 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
                 </svg>
-                {caseItem.evidenceCount} Evidence Items
+                {caseItem.evidenceCount ?? 0} Evidence Items
               </div>
             </div>
           </div>

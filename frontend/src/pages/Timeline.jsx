@@ -1,70 +1,60 @@
 import { useState } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import { useCases } from '../hooks/useCases';
 
 const Timeline = () => {
-  const [activities] = useState([
-    {
-      id: 1,
-      type: 'case_created',
-      title: 'Case Created',
-      description: 'New case "Burglary - Downtown Bank" was created',
-      user: 'Officer Smith',
-      timestamp: '2026-06-13 10:30 AM',
-      icon: '📋',
-      color: 'blue'
-    },
-    {
-      id: 2,
-      type: 'evidence_added',
-      title: 'Evidence Added',
-      description: '15 evidence items logged with coordinates',
-      user: 'Officer Smith',
-      timestamp: '2026-06-13 11:45 AM',
-      icon: '📍',
-      color: 'yellow'
-    },
-    {
-      id: 3,
-      type: 'photo_uploaded',
-      title: 'Scene Photo Uploaded',
-      description: 'Crime scene panoramic view uploaded',
-      user: 'Officer Johnson',
-      timestamp: '2026-06-13 12:15 PM',
-      icon: '📸',
-      color: 'green'
-    },
-    {
-      id: 4,
-      type: 'case_updated',
-      title: 'Case Updated',
-      description: 'Priority level changed to HIGH',
-      user: 'Officer Smith',
-      timestamp: '2026-06-13 02:30 PM',
-      icon: '✏️',
-      color: 'orange'
-    },
-    {
-      id: 5,
-      type: 'evidence_added',
-      title: 'Evidence Added',
-      description: '3 additional fingerprint samples logged',
-      user: 'Forensic Tech Davis',
-      timestamp: '2026-06-13 03:45 PM',
-      icon: '🔬',
-      color: 'purple'
-    },
-    {
-      id: 6,
-      type: 'case_created',
-      title: 'Case Created',
-      description: 'New case "Hit and Run - Highway 5" initiated',
-      user: 'Officer Johnson',
-      timestamp: '2026-06-12 09:15 AM',
-      icon: '📋',
-      color: 'blue'
-    }
-  ]);
-
+  const { currentUser } = useAuth();
+  const { cases, loading } = useCases();
   const [filter, setFilter] = useState('all');
+
+  const activities = cases
+    .flatMap((caseItem) => {
+      const timestamp = caseItem.createdAt ? new Date(caseItem.createdAt).toISOString() : null;
+      const baseUser = caseItem.createdByName || currentUser?.name || 'Officer';
+      const events = [];
+
+      if (timestamp) {
+        events.push({
+          id: `${caseItem._id}-created`,
+          type: 'case_created',
+          title: 'Case Created',
+          description: `New case "${caseItem.title}" was created`,
+          user: baseUser,
+          timestamp,
+          icon: '📋',
+          color: 'blue'
+        });
+      }
+
+      if (caseItem.sceneImageName && timestamp) {
+        events.push({
+          id: `${caseItem._id}-photo`,
+          type: 'photo_uploaded',
+          title: 'Scene Photo Uploaded',
+          description: `Photo "${caseItem.sceneImageName}" added to ${caseItem.title}`,
+          user: baseUser,
+          timestamp,
+          icon: '📸',
+          color: 'green'
+        });
+      }
+
+      if (caseItem.evidenceCount > 0 && timestamp) {
+        events.push({
+          id: `${caseItem._id}-evidence`,
+          type: 'evidence_added',
+          title: 'Evidence Logged',
+          description: `${caseItem.evidenceCount} evidence item(s) recorded for ${caseItem.title}`,
+          user: baseUser,
+          timestamp,
+          icon: '📍',
+          color: 'yellow'
+        });
+      }
+
+      return events;
+    })
+    .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
   const getColorClasses = (color) => {
     const colors = {
