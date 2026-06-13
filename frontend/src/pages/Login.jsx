@@ -47,9 +47,9 @@ const Login = () => {
         {/* Header */}
         <div className="text-center mb-10">
           <div className="flex items-center justify-center gap-3 mb-3">
-            <div className="evidence-marker w-12 h-12">
+            {/* <div className="evidence-marker w-12 h-12">
               <span className="text-2xl font-bold text-[#0a0b0f]">1</span>
-            </div>
+            </div> */}
             <h1 className="text-4xl font-bold text-gray-100 tracking-tight">SceneMap</h1>
           </div>
           <p className="text-gray-400 text-sm">Interactive Field Evidence Logger</p>

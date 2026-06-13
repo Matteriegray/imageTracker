@@ -104,6 +104,46 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('authToken');
   };
 
+  const updateProfile = async (profileData) => {
+    try {
+      const response = await fetch(`${API_URL}/api/auth/profile`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${authToken}`
+        },
+        body: JSON.stringify(profileData)
+      });
+
+      const data = await response.json();
+
+      if (response.status === 503) {
+        return {
+          success: false,
+          message: 'Database is not connected. Please contact administrator.'
+        };
+      }
+
+      if (!response.ok) {
+        return { success: false, message: data.message || 'Failed to update profile' };
+      }
+
+      // Update local state with new user data and token
+      setCurrentUser(data.user);
+      setAuthToken(data.token);
+      localStorage.setItem('currentUser', JSON.stringify(data.user));
+      localStorage.setItem('authToken', data.token);
+
+      return { success: true, user: data.user };
+    } catch (error) {
+      console.error('Update profile error:', error);
+      return {
+        success: false,
+        message: 'Unable to connect to the server. Please try again.'
+      };
+    }
+  };
+
   const value = {
     currentUser,
     authToken,
@@ -111,6 +151,7 @@ export const AuthProvider = ({ children }) => {
     login,
     signup,
     logout,
+    updateProfile,
     isAuthenticated: !!currentUser
   };
 

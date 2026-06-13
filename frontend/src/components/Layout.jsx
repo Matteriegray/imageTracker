@@ -18,9 +18,9 @@ const Layout = () => {
         <div className="max-w-7xl mx-auto px-6 h-18 flex items-center justify-between gap-8">
           {/* Logo */}
           <Link to="/dashboard" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-            <div className="evidence-marker w-9 h-9">
+            {/* <div className="evidence-marker w-9 h-9">
               <span className="text-lg font-bold text-[#0a0b0f]">1</span>
-            </div>
+            </div> */}
             <span className="text-2xl font-bold text-gray-100 tracking-tight">SceneMap</span>
           </Link>
 

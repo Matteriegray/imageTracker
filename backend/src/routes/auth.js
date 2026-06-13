@@ -179,4 +179,61 @@ router.post('/reset-password', checkDbConnection, async (req, res) => {
   }
 });
 
+// Update user profile
+router.patch('/profile', require('../middleware/auth'), checkDbConnection, async (req, res) => {
+  try {
+    const { name, email, badgeNumber, department } = req.body;
+    const userId = req.user.id;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Check if email is being changed and if it's already taken
+    if (email && email.toLowerCase() !== user.email) {
+      const existingUser = await User.findOne({ email: email.toLowerCase() });
+      if (existingUser) {
+        return res.status(409).json({ message: 'Email is already in use' });
+      }
+      user.email = email.toLowerCase();
+    }
+
+    // Update fields
+    if (name) user.name = name;
+    if (badgeNumber !== undefined) user.badgeNumber = badgeNumber;
+    if (department !== undefined) user.department = department;
+
+    await user.save();
+
+    // Generate new token with updated info
+    const secret = process.env.JWT_SECRET;
+    const token = jwt.sign(
+      {
+        id: user._id,
+        email: user.email,
+        name: user.name
+      },
+      secret,
+      { expiresIn: '8h' }
+    );
+
+    return res.json({
+      token,
+      user: {
+        id: user._id,
+        email: user.email,
+        name: user.name,
+        badgeNumber: user.badgeNumber,
+        department: user.department,
+        role: user.role,
+        createdAt: user.createdAt
+      }
+    });
+  } catch (error) {
+    console.error('Update profile error:', error);
+    return res.status(500).json({ message: 'Unable to update profile', error: error.message });
+  }
+});
+
 module.exports = router;

@@ -3,9 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 const Profile = () => {
-  const { currentUser, logout } = useAuth();
+  const { currentUser, logout, updateProfile } = useAuth();
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const [formData, setFormData] = useState({
     name: currentUser?.name || '',
     email: currentUser?.email || '',
@@ -16,13 +19,27 @@ const Profile = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    setError('');
+    setSuccessMessage('');
   };
 
-  const handleSave = () => {
-    // TODO: API call to update user profile
-    console.log('Save profile:', formData);
-    setIsEditing(false);
-    alert('Profile update feature coming soon!');
+  const handleSave = async () => {
+    setIsSaving(true);
+    setError('');
+    setSuccessMessage('');
+
+    const result = await updateProfile(formData);
+
+    if (result.success) {
+      setSuccessMessage('Profile updated successfully!');
+      setIsEditing(false);
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccessMessage(''), 3000);
+    } else {
+      setError(result.message || 'Failed to update profile');
+    }
+
+    setIsSaving(false);
   };
 
   const handleCancel = () => {
@@ -33,6 +50,8 @@ const Profile = () => {
       department: currentUser?.department || '',
     });
     setIsEditing(false);
+    setError('');
+    setSuccessMessage('');
   };
 
   const handleDeleteAccount = () => {
@@ -51,6 +70,29 @@ const Profile = () => {
         <h1 className="text-3xl font-bold text-gray-100 mb-2">Profile</h1>
         <p className="text-gray-400">Manage your account information and preferences</p>
       </div>
+
+      {/* Success Message */}
+      {successMessage && (
+        <div className="mb-6 rounded-xl border border-green-500/30 bg-green-500/10 p-4 text-green-300 flex items-center gap-3">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <circle cx="10" cy="10" r="9" stroke="currentColor" strokeWidth="1.5"/>
+            <path d="M6 10L9 13L14 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          {successMessage}
+        </div>
+      )}
+
+      {/* Error Message */}
+      {error && (
+        <div className="mb-6 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-red-300 flex items-center gap-3">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <circle cx="10" cy="10" r="9" stroke="currentColor" strokeWidth="1.5"/>
+            <path d="M10 6V11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+            <circle cx="10" cy="14" r="0.5" fill="currentColor"/>
+          </svg>
+          {error}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Profile Card */}
@@ -112,15 +154,24 @@ const Profile = () => {
                 <div className="flex gap-2">
                   <button
                     onClick={handleCancel}
-                    className="px-4 py-2 bg-[#1f2028] hover:bg-[#2e303a] text-gray-300 font-medium rounded-lg transition-all"
+                    disabled={isSaving}
+                    className="px-4 py-2 bg-[#1f2028] hover:bg-[#2e303a] text-gray-300 font-medium rounded-lg transition-all disabled:opacity-50"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleSave}
-                    className="px-4 py-2 bg-[#fbbf24] hover:bg-[#f59e0b] text-[#0a0b0f] font-semibold rounded-lg transition-all"
+                    disabled={isSaving}
+                    className="px-4 py-2 bg-[#fbbf24] hover:bg-[#f59e0b] text-[#0a0b0f] font-semibold rounded-lg transition-all disabled:opacity-50 flex items-center gap-2"
                   >
-                    Save Changes
+                    {isSaving ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-[#0a0b0f] border-t-transparent rounded-full animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      'Save Changes'
+                    )}
                   </button>
                 </div>
               )}
@@ -209,52 +260,7 @@ const Profile = () => {
             </div>
           </div>
 
-          {/* Security Section */}
-          <div className="bg-[#16171d] border border-[#2e303a] rounded-xl p-6">
-            <h3 className="text-xl font-semibold text-gray-100 mb-6">Security</h3>
-            
-            <div className="space-y-4">
-              {/* Change Password */}
-              <button
-                onClick={() => alert('Change password feature coming soon!')}
-                className="w-full flex items-center justify-between px-4 py-3 bg-[#1f2028] hover:bg-[#2e303a] border border-[#2e303a] rounded-lg text-left transition-all group"
-              >
-                <div className="flex items-center gap-3">
-                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="text-gray-400 group-hover:text-[#fbbf24] transition-colors">
-                    <path d="M10 2C7.79086 2 6 3.79086 6 6V8H4C3.44772 8 3 8.44772 3 9V16C3 16.5523 3.44772 17 4 17H16C16.5523 17 17 16.5523 17 16V9C17 8.44772 16.5523 8 16 8H14V6C14 3.79086 12.2091 2 10 2Z" stroke="currentColor" strokeWidth="1.5"/>
-                    <circle cx="10" cy="12.5" r="1.5" fill="currentColor"/>
-                  </svg>
-                  <div>
-                    <p className="text-gray-100 font-medium">Change Password</p>
-                    <p className="text-xs text-gray-500">Update your account password</p>
-                  </div>
-                </div>
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="text-gray-600 group-hover:text-gray-400 transition-colors">
-                  <path d="M7 5L12 10L7 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </button>
-
-              {/* Two-Factor Authentication */}
-              <button
-                onClick={() => alert('2FA feature coming soon!')}
-                className="w-full flex items-center justify-between px-4 py-3 bg-[#1f2028] hover:bg-[#2e303a] border border-[#2e303a] rounded-lg text-left transition-all group"
-              >
-                <div className="flex items-center gap-3">
-                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="text-gray-400 group-hover:text-[#fbbf24] transition-colors">
-                    <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" strokeWidth="1.5"/>
-                    <path d="M7 10L9 12L13 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                  <div>
-                    <p className="text-gray-100 font-medium">Two-Factor Authentication</p>
-                    <p className="text-xs text-gray-500">Add an extra layer of security</p>
-                  </div>
-                </div>
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="text-gray-600 group-hover:text-gray-400 transition-colors">
-                  <path d="M7 5L12 10L7 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </button>
-            </div>
-          </div>
+          {/* Security Section */} 
 
           {/* Danger Zone */}
           <div className="bg-red-500/5 border border-red-500/20 rounded-xl p-6">
