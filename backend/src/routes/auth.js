@@ -1,12 +1,24 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const mongoose = require('mongoose');
 
 const User = require('../models/User');
 
 const router = express.Router();
 
-router.post('/signup', async (req, res) => {
+// Middleware to check database connection
+const checkDbConnection = (req, res, next) => {
+  if (mongoose.connection.readyState !== 1) {
+    return res.status(503).json({ 
+      message: 'Database not connected. Please contact administrator.',
+      hint: 'MongoDB IP whitelist may need to be configured'
+    });
+  }
+  next();
+};
+
+router.post('/signup', checkDbConnection, async (req, res) => {
   try {
     const { fullName, email, password, badgeNumber, department } = req.body;
     if (!fullName || !email || !password) {
@@ -57,11 +69,11 @@ router.post('/signup', async (req, res) => {
     });
   } catch (error) {
     console.error('Signup error:', error);
-    return res.status(500).json({ message: 'Unable to create user' });
+    return res.status(500).json({ message: 'Unable to create user', error: error.message });
   }
 });
 
-router.post('/login', async (req, res) => {
+router.post('/login', checkDbConnection, async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) {
@@ -106,7 +118,7 @@ router.post('/login', async (req, res) => {
     });
   } catch (error) {
     console.error('Login error:', error);
-    return res.status(500).json({ message: 'Unable to login' });
+    return res.status(500).json({ message: 'Unable to login', error: error.message });
   }
 });
 
