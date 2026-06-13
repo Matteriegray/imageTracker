@@ -4,4 +4,8 @@ node_modules/
 .DS_Store
 npm-debug.log
 *.log
+dist/
+build/
 .vscode/
+DEPLOY_QUICKSTART.md 
+RENDER_DEPLOYMENT_GUIDE.md
