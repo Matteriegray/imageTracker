@@ -60,4 +60,28 @@ router.get('/:id', authMiddleware, async (req, res) => {
   }
 });
 
+router.patch('/:id', authMiddleware, async (req, res) => {
+  try {
+    const { status } = req.body;
+    if (!['active', 'closed'].includes(status)) {
+      return res.status(400).json({ message: 'Invalid status value' });
+    }
+
+    const caseRecord = await Case.findOneAndUpdate(
+      { _id: req.params.id, createdBy: req.user.id },
+      { status },
+      { new: true }
+    );
+
+    if (!caseRecord) {
+      return res.status(404).json({ message: 'Case not found' });
+    }
+
+    res.json(caseRecord);
+  } catch (error) {
+    console.error('Update case status error:', error);
+    res.status(500).json({ message: 'Unable to update case status' });
+  }
+});
+
 module.exports = router;

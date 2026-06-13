@@ -12,6 +12,30 @@ const CaseDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  const closeCase = async () => {
+    if (!caseDetail?._id) return;
+    try {
+      const response = await fetch(`${API_URL}/api/cases/${caseDetail._id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${authToken}`
+        },
+        body: JSON.stringify({ status: 'closed' })
+      });
+
+      if (!response.ok) {
+        throw new Error('Unable to close case');
+      }
+
+      const updatedCase = await response.json();
+      setCaseDetail(updatedCase);
+    } catch (err) {
+      console.error('Close case error:', err);
+      alert('Unable to close case. Please try again.');
+    }
+  };
+
   useEffect(() => {
     const loadCase = async () => {
       if (!authToken) return;
@@ -77,12 +101,22 @@ const CaseDetail = () => {
           <h1 className="text-3xl font-bold text-gray-100 mb-2">Case Detail</h1>
           <p className="text-gray-400">Review the full investigation record and scene photo.</p>
         </div>
-        <button
-          onClick={() => navigate(-1)}
-          className="px-5 py-3 bg-[#fbbf24] hover:bg-[#f59e0b] text-[#0a0b0f] font-semibold rounded-lg transition-all"
-        >
-          Back to Cases
-        </button>
+        <div className="flex flex-wrap gap-3">
+          {caseDetail?.status === 'active' && (
+            <button
+              onClick={closeCase}
+              className="px-5 py-3 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg transition-all"
+            >
+              Close Case
+            </button>
+          )}
+          <button
+            onClick={() => navigate(-1)}
+            className="px-5 py-3 bg-[#fbbf24] hover:bg-[#f59e0b] text-[#0a0b0f] font-semibold rounded-lg transition-all"
+          >
+            Back to Cases
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 mb-8">

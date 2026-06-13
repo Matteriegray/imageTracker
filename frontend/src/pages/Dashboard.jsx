@@ -10,6 +10,7 @@ const Dashboard = () => {
   const { cases, loading } = useCases();
 
   const activeCount = cases.filter((c) => c.status === 'active').length;
+  const closedCount = cases.filter((c) => c.status === 'closed').length;
   const evidenceCount = cases.reduce((sum, c) => sum + (c.evidenceCount || 0), 0);
   const photoCases = cases.filter((c) => !!c.sceneImageUrl);
   const scenePhotoCount = photoCases.length;
@@ -129,6 +130,22 @@ const Dashboard = () => {
               Scene Photos
             </h3>
             <p className="text-3xl font-bold text-gray-100">{cases.filter((c) => !!c.sceneImageUrl).length}</p>
+          </div>
+        </div>
+
+        {/* Closed Cases */}
+        <div
+          onClick={() => navigate('/cases?filter=closed')}
+          className="bg-[#16171d] border border-[#2e303a] rounded-xl p-6 flex items-center gap-4 hover:border-[#fbbf24]/30 hover:-translate-y-1 transition-all duration-200 shadow-lg cursor-pointer group"
+        >
+          <div className="text-4xl flex items-center justify-center w-14 h-14 bg-[#1f2028] rounded-xl group-hover:scale-110 transition-transform">
+            🔒
+          </div>
+          <div>
+            <h3 className="text-xs uppercase tracking-wider text-gray-500 font-medium mb-1">
+              Closed Cases
+            </h3>
+            <p className="text-3xl font-bold text-gray-100">{closedCount}</p>
           </div>
         </div>
 

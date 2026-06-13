@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
 const Cases = () => {
   const { authToken } = useAuth();
+  const location = useLocation();
   const [cases, setCases] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -41,10 +42,44 @@ const Cases = () => {
     }
   }, [authToken]);
 
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const requestedFilter = searchParams.get('filter');
+
+    if (requestedFilter === 'active' || requestedFilter === 'closed' || requestedFilter === 'all') {
+      setFilter(requestedFilter);
+    } else {
+      setFilter('all');
+    }
+  }, [location.search]);
+
   const filteredCases = cases.filter(c => {
     if (filter === 'all') return true;
     return c.status === filter;
   });
+
+  const closeCase = async (caseId) => {
+    try {
+      const response = await fetch(`${API_URL}/api/cases/${caseId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${authToken}`
+        },
+        body: JSON.stringify({ status: 'closed' })
+      });
+
+      if (!response.ok) {
+        throw new Error('Unable to close case');
+      }
+
+      const updatedCase = await response.json();
+      setCases(prev => prev.map((c) => (c._id === updatedCase._id ? updatedCase : c)));
+    } catch (err) {
+      console.error('Close case error:', err);
+      alert('Unable to close case. Please try again.');
+    }
+  };
 
   if (loading) {
     return (
@@ -146,12 +181,26 @@ const Cases = () => {
                 <p className="text-sm text-gray-500 mb-1">Case #: {caseItem.caseNumber}</p>
                 <p className="text-sm text-gray-400">📍 {caseItem.location}</p>
               </div>
-              <Link
-                to={`/cases/${caseItem._id}`}
-                className="px-4 py-2 bg-[#1f2028] hover:bg-[#2e303a] text-gray-300 rounded-lg text-sm font-medium transition-all"
-              >
-                View Details
-              </Link>
+              <div className="flex gap-2 items-center">
+                <Link
+                  to={`/cases/${caseItem._id}`}
+                  className="px-4 py-2 bg-[#1f2028] hover:bg-[#2e303a] text-gray-300 rounded-lg text-sm font-medium transition-all"
+                >
+                  View Details
+                </Link>
+                {caseItem.status === 'active' ? (
+                  <button
+                    onClick={() => closeCase(caseItem._id)}
+                    className="px-4 py-2 bg-[#fbbf24] hover:bg-[#f59e0b] text-[#0a0b0f] rounded-lg text-sm font-medium transition-all"
+                  >
+                    Close Case
+                  </button>
+                ) : (
+                  <span className="px-4 py-2 rounded-lg border border-gray-600 text-xs text-gray-400 uppercase tracking-[0.08em]">
+                    Closed
+                  </span>
+                )}
+              </div>
             </div>
 
             <div className="flex items-center gap-6 pt-4 border-t border-[#2e303a] text-sm">
