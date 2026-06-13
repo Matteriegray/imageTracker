@@ -1,7 +1,9 @@
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const Dashboard = () => {
   const { currentUser } = useAuth();
+  const navigate = useNavigate();
 
   return (
     <div className="py-10 px-5 max-w-7xl mx-auto">
@@ -24,7 +26,10 @@ const Dashboard = () => {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
         {/* Active Cases */}
-        <div className="bg-[#16171d] border border-[#2e303a] rounded-xl p-6 flex items-center gap-4 hover:border-[#fbbf24]/30 hover:-translate-y-1 transition-all duration-200 shadow-lg cursor-pointer group">
+        <div 
+          onClick={() => navigate('/cases')}
+          className="bg-[#16171d] border border-[#2e303a] rounded-xl p-6 flex items-center gap-4 hover:border-[#fbbf24]/30 hover:-translate-y-1 transition-all duration-200 shadow-lg cursor-pointer group"
+        >
           <div className="text-4xl flex items-center justify-center w-14 h-14 bg-[#1f2028] rounded-xl group-hover:scale-110 transition-transform">
             📋
           </div>
@@ -32,7 +37,7 @@ const Dashboard = () => {
             <h3 className="text-xs uppercase tracking-wider text-gray-500 font-medium mb-1">
               Active Cases
             </h3>
-            <p className="text-3xl font-bold text-gray-100">0</p>
+            <p className="text-3xl font-bold text-gray-100">3</p>
           </div>
         </div>
 
@@ -45,7 +50,7 @@ const Dashboard = () => {
             <h3 className="text-xs uppercase tracking-wider text-gray-500 font-medium mb-1">
               Evidence Pins
             </h3>
-            <p className="text-3xl font-bold text-gray-100">0</p>
+            <p className="text-3xl font-bold text-gray-100">27</p>
           </div>
         </div>
 
@@ -58,12 +63,15 @@ const Dashboard = () => {
             <h3 className="text-xs uppercase tracking-wider text-gray-500 font-medium mb-1">
               Scene Photos
             </h3>
-            <p className="text-3xl font-bold text-gray-100">0</p>
+            <p className="text-3xl font-bold text-gray-100">12</p>
           </div>
         </div>
 
         {/* Last Activity */}
-        <div className="bg-[#16171d] border border-[#2e303a] rounded-xl p-6 flex items-center gap-4 hover:border-[#fbbf24]/30 hover:-translate-y-1 transition-all duration-200 shadow-lg cursor-pointer group">
+        <div 
+          onClick={() => navigate('/timeline')}
+          className="bg-[#16171d] border border-[#2e303a] rounded-xl p-6 flex items-center gap-4 hover:border-[#fbbf24]/30 hover:-translate-y-1 transition-all duration-200 shadow-lg cursor-pointer group"
+        >
           <div className="text-4xl flex items-center justify-center w-14 h-14 bg-[#1f2028] rounded-xl group-hover:scale-110 transition-transform">
             ⏱️
           </div>
@@ -80,19 +88,28 @@ const Dashboard = () => {
       <div className="bg-[#16171d] border border-[#2e303a] rounded-xl p-8 mb-8 shadow-lg">
         <h2 className="text-xl font-semibold text-gray-100 mb-5">Quick Actions</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <button className="flex items-center justify-center gap-2 py-4 px-5 bg-[#fbbf24] hover:bg-[#f59e0b] text-[#0a0b0f] font-semibold rounded-lg transition-all duration-200 hover:-translate-y-1 shadow-lg hover:shadow-[#fbbf24]/30">
+          <button 
+            onClick={() => navigate('/cases/new')}
+            className="flex items-center justify-center gap-2 py-4 px-5 bg-[#fbbf24] hover:bg-[#f59e0b] text-[#0a0b0f] font-semibold rounded-lg transition-all duration-200 hover:-translate-y-1 shadow-lg hover:shadow-[#fbbf24]/30"
+          >
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
               <path d="M10 5V15M5 10H15" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
             </svg>
             Create New Case
           </button>
-          <button className="flex items-center justify-center gap-2 py-4 px-5 bg-[#1f2028] hover:bg-[#2e303a] text-gray-300 font-medium rounded-lg transition-all duration-200 border border-[#2e303a] hover:border-[#fbbf24]/30 hover:-translate-y-1">
+          <button 
+            onClick={() => navigate('/cases')}
+            className="flex items-center justify-center gap-2 py-4 px-5 bg-[#1f2028] hover:bg-[#2e303a] text-gray-300 font-medium rounded-lg transition-all duration-200 border border-[#2e303a] hover:border-[#fbbf24]/30 hover:-translate-y-1"
+          >
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
               <path d="M3 8L10 3L17 8V16C17 16.5523 16.5523 17 16 17H4C3.44772 17 3 16.5523 3 16V8Z" stroke="currentColor" strokeWidth="1.5"/>
             </svg>
             View Active Cases
           </button>
-          <button className="flex items-center justify-center gap-2 py-4 px-5 bg-[#1f2028] hover:bg-[#2e303a] text-gray-300 font-medium rounded-lg transition-all duration-200 border border-[#2e303a] hover:border-[#fbbf24]/30 hover:-translate-y-1">
+          <button 
+            onClick={() => navigate('/timeline')}
+            className="flex items-center justify-center gap-2 py-4 px-5 bg-[#1f2028] hover:bg-[#2e303a] text-gray-300 font-medium rounded-lg transition-all duration-200 border border-[#2e303a] hover:border-[#fbbf24]/30 hover:-translate-y-1"
+          >
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
               <rect x="3" y="5" width="14" height="12" rx="1" stroke="currentColor" strokeWidth="1.5"/>
               <path d="M3 8H17" stroke="currentColor" strokeWidth="1.5"/>
@@ -104,11 +121,43 @@ const Dashboard = () => {
 
       {/* Recent Activity */}
       <div className="bg-[#16171d] border border-[#2e303a] rounded-xl p-8 shadow-lg">
-        <h2 className="text-xl font-semibold text-gray-100 mb-5">Recent Activity</h2>
-        <div className="text-center py-16">
-          <div className="text-6xl mb-4 opacity-50">📭</div>
-          <p className="text-gray-500 mb-2">No recent activity</p>
-          <p className="text-sm text-gray-600">Create your first case to get started</p>
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-xl font-semibold text-gray-100">Recent Activity</h2>
+          <button 
+            onClick={() => navigate('/timeline')}
+            className="text-sm text-[#fbbf24] hover:text-[#f59e0b] font-medium"
+          >
+            View All →
+          </button>
+        </div>
+        
+        <div className="space-y-4">
+          <div className="flex items-start gap-4 p-4 bg-[#1f2028] rounded-lg">
+            <div className="text-2xl">📋</div>
+            <div className="flex-1">
+              <p className="text-gray-200 font-medium mb-1">Case Created</p>
+              <p className="text-sm text-gray-400">Burglary - Downtown Bank</p>
+              <p className="text-xs text-gray-500 mt-2">2 hours ago</p>
+            </div>
+          </div>
+          
+          <div className="flex items-start gap-4 p-4 bg-[#1f2028] rounded-lg">
+            <div className="text-2xl">📍</div>
+            <div className="flex-1">
+              <p className="text-gray-200 font-medium mb-1">Evidence Added</p>
+              <p className="text-sm text-gray-400">15 evidence items logged</p>
+              <p className="text-xs text-gray-500 mt-2">3 hours ago</p>
+            </div>
+          </div>
+          
+          <div className="flex items-start gap-4 p-4 bg-[#1f2028] rounded-lg">
+            <div className="text-2xl">📸</div>
+            <div className="flex-1">
+              <p className="text-gray-200 font-medium mb-1">Photo Uploaded</p>
+              <p className="text-sm text-gray-400">Scene panoramic view</p>
+              <p className="text-xs text-gray-500 mt-2">4 hours ago</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
