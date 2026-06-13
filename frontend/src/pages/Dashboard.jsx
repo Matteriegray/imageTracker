@@ -240,7 +240,7 @@ const Dashboard = () => {
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
               <path d="M3 8L10 3L17 8V16C17 16.5523 16.5523 17 16 17H4C3.44772 17 3 16.5523 3 16V8Z" stroke="currentColor" strokeWidth="1.5"/>
             </svg>
-            View Active Cases
+            View All Cases
           </button>
           <button 
             onClick={() => navigate('/timeline')}
