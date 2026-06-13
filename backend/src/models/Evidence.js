@@ -1,57 +1,57 @@
 const mongoose = require('mongoose');
 
-const ChainOfCustodySchema = new mongoose.Schema({
-  action: {
-    type: String,
-    enum: ['collected', 'transferred', 'received', 'analyzed', 'stored'],
-    required: true
-  },
-  officer: {
-    name: String,
-    badge: String
-  },
-  transferredFrom: String,
-  transferredTo: String,
-  receivedBy: {
-    name: String,
-    badge: String
-  },
-  date: {
-    type: Date,
-    default: Date.now
-  },
-  notes: String
-});
-
 const EvidenceSchema = new mongoose.Schema({
   caseId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Case',
     required: true
   },
-  evidenceType: {
-    type: String,
-    enum: ['weapon', 'dna', 'document', 'photo', 'trace', 'other'],
+  pinNumber: {
+    type: Number,
     required: true
   },
-  description: {
+  pinXPercent: {
+    type: Number,
+    required: true,
+    min: 0,
+    max: 100
+  },
+  pinYPercent: {
+    type: Number,
+    required: true,
+    min: 0,
+    max: 100
+  },
+  itemName: {
     type: String,
     required: true,
     trim: true
   },
-  location: String,
-  photoUrl: String,
-  status: {
+  bagSerialNumber: {
     type: String,
-    enum: ['collected', 'in-transit', 'stored', 'analyzed', 'released'],
-    default: 'collected'
+    trim: true
   },
-  chainOfCustody: [ChainOfCustodySchema],
-  tags: [String],
+  category: {
+    type: String,
+    required: true,
+    enum: ['weapon', 'biological', 'trace', 'document', 'digital', 'impression', 'other'],
+    default: 'other'
+  },
+  description: {
+    type: String,
+    trim: true
+  },
+  collectedBy: {
+    type: String,
+    trim: true
+  },
   createdAt: {
     type: Date,
     default: Date.now
   }
 });
+
+// Compound index to ensure unique pin numbers per case
+EvidenceSchema.index({ caseId: 1, pinNumber: 1 }, { unique: true });
 
 module.exports = mongoose.model('Evidence', EvidenceSchema);
