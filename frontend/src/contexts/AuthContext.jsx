@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 
 const AuthContext = createContext(null);
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
@@ -30,6 +30,15 @@ export const AuthProvider = ({ children }) => {
       });
 
       const data = await response.json();
+      
+      // Check for specific error statuses
+      if (response.status === 503) {
+        return { 
+          success: false, 
+          message: 'Database is not connected. Please ask your database administrator to whitelist the IP address in MongoDB Atlas.' 
+        };
+      }
+      
       if (!response.ok) {
         return { success: false, message: data.message || 'Invalid credentials' };
       }
@@ -41,7 +50,11 @@ export const AuthProvider = ({ children }) => {
 
       return { success: true, user: data.user };
     } catch (error) {
-      return { success: false, message: 'Unable to connect to the server' };
+      console.error('Login error:', error);
+      return { 
+        success: false, 
+        message: 'Unable to connect to the server. Please check if the backend is running on port 5000.' 
+      };
     }
   };
 
@@ -56,6 +69,15 @@ export const AuthProvider = ({ children }) => {
       });
 
       const data = await response.json();
+      
+      // Check for specific error statuses
+      if (response.status === 503) {
+        return { 
+          success: false, 
+          message: 'Database is not connected. Please ask your database administrator to whitelist the IP address in MongoDB Atlas.' 
+        };
+      }
+      
       if (!response.ok) {
         return { success: false, message: data.message || 'Signup failed' };
       }
@@ -67,7 +89,11 @@ export const AuthProvider = ({ children }) => {
 
       return { success: true, user: data.user };
     } catch (error) {
-      return { success: false, message: 'Unable to connect to the server' };
+      console.error('Signup error:', error);
+      return { 
+        success: false, 
+        message: 'Unable to connect to the server. Please check if the backend is running on port 5000.' 
+      };
     }
   };
 
