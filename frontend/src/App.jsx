@@ -11,6 +11,7 @@ import EditCase from './pages/EditCase';
 import CaseDetail from './pages/CaseDetail';
 import Evidence from './pages/Evidence';
 import Timeline from './pages/Timeline';
+import Profile from './pages/Profile';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -39,6 +40,7 @@ function App() {
             <Route path="cases/:id/edit" element={<EditCase />} />
             <Route path="cases/:caseId/evidence" element={<Evidence />} />
             <Route path="timeline" element={<Timeline />} />
+            <Route path="profile" element={<Profile />} />
           </Route>
         </Routes>
       </BrowserRouter>

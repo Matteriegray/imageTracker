@@ -60,10 +60,22 @@ const Layout = () => {
 
           {/* User Info & Logout */}
           <div className="flex items-center gap-4">
-            <div className="hidden sm:flex flex-col items-end">
-              <span className="text-sm font-semibold text-gray-100">{currentUser?.name}</span>
-              <span className="text-xs text-gray-500">{currentUser?.badge}</span>
-            </div>
+            <Link 
+              to="/profile"
+              className="hidden sm:flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer"
+            >
+              {/* User Avatar */}
+              <div className="w-10 h-10 bg-[#fbbf24] rounded-full flex items-center justify-center border-2 border-[#2e303a]">
+                <span className="text-base font-bold text-[#0a0b0f]">
+                  {currentUser?.name?.charAt(0).toUpperCase() || 'U'}
+                </span>
+              </div>
+              {/* User Info */}
+              <div className="flex flex-col items-start">
+                <span className="text-sm font-semibold text-gray-100">{currentUser?.name}</span>
+                <span className="text-xs text-gray-500">{currentUser?.badgeNumber ? `Badge #${currentUser.badgeNumber}` : 'View Profile'}</span>
+              </div>
+            </Link>
             <button
               onClick={handleLogout}
               className="flex items-center gap-2 px-4 py-2 bg-[#1f2028] border border-[#2e303a] hover:bg-[#2e303a] hover:border-[#fbbf24]/30 text-gray-300 rounded-lg font-medium transition-all"

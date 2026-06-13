@@ -144,7 +144,6 @@ const Login = () => {
             </Link>
           </p>
           <p className="text-xs text-gray-600">Authorized Personnel Only</p>
-          <p className="text-xs text-gray-500 italic">Demo: Use any email/password to login</p>
         </div>
       </div>
     </div>
