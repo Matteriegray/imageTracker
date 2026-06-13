@@ -39,7 +39,7 @@ router.get('/case/:caseId', authMiddleware, checkDbConnection, async (req, res) 
 // Create new evidence pin
 router.post('/', authMiddleware, checkDbConnection, async (req, res) => {
   try {
-    const { caseId, pinXPercent, pinYPercent, itemName, bagSerialNumber, category, description, collectedBy } = req.body;
+    const { caseId, pinXPercent, pinYPercent, itemName, bagSerialNumber, category, description, collectedBy, photoId } = req.body;
 
     if (!caseId || pinXPercent === undefined || pinYPercent === undefined || !itemName) {
       return res.status(400).json({ message: 'Case ID, coordinates, and item name are required' });
@@ -49,6 +49,14 @@ router.post('/', authMiddleware, checkDbConnection, async (req, res) => {
     const caseRecord = await Case.findOne({ _id: caseId, createdBy: req.user.id });
     if (!caseRecord) {
       return res.status(404).json({ message: 'Case not found' });
+    }
+
+    // If a photoId is provided, verify it exists in the case's scenePhotos
+    if (photoId) {
+      const found = caseRecord.scenePhotos && caseRecord.scenePhotos.find(p => String(p._id) === String(photoId));
+      if (!found) {
+        return res.status(400).json({ message: 'Provided photoId does not belong to this case' });
+      }
     }
 
     // Get next pin number for this case
@@ -64,7 +72,8 @@ router.post('/', authMiddleware, checkDbConnection, async (req, res) => {
       bagSerialNumber,
       category: category || 'other',
       description,
-      collectedBy: collectedBy || req.user.name
+      collectedBy: collectedBy || req.user.name,
+      photoId: photoId || undefined
     });
 
     await evidence.save();
@@ -110,6 +119,42 @@ router.patch('/:id', authMiddleware, checkDbConnection, async (req, res) => {
   } catch (error) {
     console.error('Update evidence error:', error);
     res.status(500).json({ message: 'Unable to update evidence', error: error.message });
+  }
+});
+
+// Add chain of custody entry
+router.post('/:id/custody', authMiddleware, checkDbConnection, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { action, transferredFrom, transferredTo, receivedBy, notes } = req.body;
+
+    if (!action) {
+      return res.status(400).json({ message: 'Action type is required' });
+    }
+
+    const evidence = await Evidence.findById(id);
+    if (!evidence) {
+      return res.status(404).json({ message: 'Evidence not found' });
+    }
+
+    const caseRecord = await Case.findOne({ _id: evidence.caseId, createdBy: req.user.id });
+    if (!caseRecord) {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    evidence.chainOfCustody.push({
+      action,
+      transferredFrom,
+      transferredTo,
+      receivedBy,
+      notes
+    });
+
+    await evidence.save();
+    res.json(evidence);
+  } catch (error) {
+    console.error('Add custody entry error:', error);
+    res.status(500).json({ message: 'Unable to add custody entry', error: error.message });
   }
 });
 

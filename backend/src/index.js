@@ -6,6 +6,7 @@ const connectDB = require('./config/db');
 const authRoutes = require('./routes/auth');
 const caseRoutes = require('./routes/cases');
 const evidenceRoutes = require('./routes/evidence');
+const relationshipRoutes = require('./routes/relationships');
 
 dotenv.config();
 
@@ -24,6 +25,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use('/api/auth', authRoutes);
 app.use('/api/cases', caseRoutes);
 app.use('/api/evidence', evidenceRoutes);
+app.use('/api/relationships', relationshipRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

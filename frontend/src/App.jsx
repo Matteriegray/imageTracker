@@ -5,6 +5,7 @@ import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
 import Cases from './pages/Cases';
 import CreateCase from './pages/CreateCase';
+import EditCase from './pages/EditCase';
 import CaseDetail from './pages/CaseDetail';
 import Evidence from './pages/Evidence';
 import Timeline from './pages/Timeline';
@@ -31,6 +32,7 @@ function App() {
             <Route path="cases" element={<Cases />} />
             <Route path="cases/new" element={<CreateCase />} />
             <Route path="cases/:id" element={<CaseDetail />} />
+            <Route path="cases/:id/edit" element={<EditCase />} />
             <Route path="cases/:caseId/evidence" element={<Evidence />} />
             <Route path="timeline" element={<Timeline />} />
           </Route>

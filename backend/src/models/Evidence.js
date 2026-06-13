@@ -22,6 +22,10 @@ const EvidenceSchema = new mongoose.Schema({
     min: 0,
     max: 100
   },
+  photoId: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: false
+  },
   itemName: {
     type: String,
     required: true,
@@ -44,6 +48,19 @@ const EvidenceSchema = new mongoose.Schema({
   collectedBy: {
     type: String,
     trim: true
+  },
+  chainOfCustody: {
+    type: [
+      new mongoose.Schema({
+        action: { type: String, required: true, trim: true },
+        transferredFrom: { type: String, trim: true },
+        transferredTo: { type: String, trim: true },
+        receivedBy: { type: String, trim: true },
+        notes: { type: String, trim: true },
+        date: { type: Date, default: Date.now }
+      }, { _id: false })
+    ],
+    default: []
   },
   createdAt: {
     type: Date,

@@ -150,7 +150,7 @@ const Dashboard = () => {
         </div>
 
         {/* Last Activity */}
-        <div 
+        {/* <div 
           onClick={() => navigate('/timeline')}
           className="bg-[#16171d] border border-[#2e303a] rounded-xl p-6 flex items-center gap-4 hover:border-[#fbbf24]/30 hover:-translate-y-1 transition-all duration-200 shadow-lg cursor-pointer group"
         >
@@ -163,7 +163,7 @@ const Dashboard = () => {
             </h3>
             <p className="text-2xl font-bold text-gray-100">{lastActivityText}</p>
           </div>
-        </div>
+        </div> */}
       </div>
 
       {/* Photo Modal */}

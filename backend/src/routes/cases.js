@@ -21,7 +21,7 @@ router.get('/', authMiddleware, async (req, res) => {
 
 router.post('/', authMiddleware, async (req, res) => {
   try {
-    const { title, location, description, priority, sceneImageName, sceneImageUrl } = req.body;
+    const { title, location, description, priority, sceneImageName, sceneImageUrl, scenePhotos } = req.body;
     if (!title || !location) {
       return res.status(400).json({ message: 'Title and location are required' });
     }
@@ -35,6 +35,7 @@ router.post('/', authMiddleware, async (req, res) => {
       status: 'active',
       sceneImageName,
       sceneImageUrl,
+      scenePhotos: scenePhotos || [],
       createdBy: req.user.id,
       createdByName: req.user.name
     });
@@ -62,14 +63,37 @@ router.get('/:id', authMiddleware, async (req, res) => {
 
 router.patch('/:id', authMiddleware, async (req, res) => {
   try {
-    const { status } = req.body;
-    if (!['active', 'closed'].includes(status)) {
-      return res.status(400).json({ message: 'Invalid status value' });
+    const { status, title, location, description, priority, scenePhotos, sceneImageName, sceneImageUrl } = req.body;
+    const updateData = {};
+
+    // Handle status updates
+    if (status !== undefined) {
+      if (!['active', 'closed'].includes(status)) {
+        return res.status(400).json({ message: 'Invalid status value' });
+      }
+      updateData.status = status;
+    }
+
+    // Handle case detail updates
+    if (title !== undefined) updateData.title = title;
+    if (location !== undefined) updateData.location = location;
+    if (description !== undefined) updateData.description = description;
+    if (priority !== undefined) {
+      if (!['low', 'medium', 'high'].includes(priority)) {
+        return res.status(400).json({ message: 'Invalid priority value' });
+      }
+      updateData.priority = priority;
+    }
+
+    if (scenePhotos !== undefined) {
+      updateData.scenePhotos = Array.isArray(scenePhotos) ? scenePhotos : [];
+      updateData.sceneImageName = sceneImageName || null;
+      updateData.sceneImageUrl = sceneImageUrl || null;
     }
 
     const caseRecord = await Case.findOneAndUpdate(
       { _id: req.params.id, createdBy: req.user.id },
-      { status },
+      updateData,
       { new: true }
     );
 
@@ -79,8 +103,8 @@ router.patch('/:id', authMiddleware, async (req, res) => {
 
     res.json(caseRecord);
   } catch (error) {
-    console.error('Update case status error:', error);
-    res.status(500).json({ message: 'Unable to update case status' });
+    console.error('Update case error:', error);
+    res.status(500).json({ message: 'Unable to update case' });
   }
 });
 

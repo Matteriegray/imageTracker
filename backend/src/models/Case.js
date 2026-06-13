@@ -34,6 +34,16 @@ const CaseSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
+  scenePhotos: {
+    type: [
+      new mongoose.Schema({
+        name: { type: String, trim: true },
+        url: { type: String, trim: true },
+        uploadedAt: { type: Date, default: Date.now }
+      }, { _id: true })
+    ],
+    default: []
+  },
   sceneImageName: {
     type: String,
     trim: true

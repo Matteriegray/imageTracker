@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+import { API_URL } from '../api/config';
 
 const CaseDetail = () => {
   const { authToken } = useAuth();
@@ -126,6 +126,12 @@ const CaseDetail = () => {
           <p className="text-gray-400">Review the full investigation record and scene photo.</p>
         </div>
         <div className="flex flex-wrap gap-3">
+          <button
+            onClick={() => navigate(`/cases/${caseDetail._id}/edit`)}
+            className="px-5 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg transition-all"
+          >
+            Edit Case
+          </button>
           {caseDetail?.status === 'active' && (
             <button
               onClick={closeCase}

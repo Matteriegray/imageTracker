@@ -3,27 +3,38 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import ChainOfCustody from '../components/ChainOfCustody';
 import EvidenceRelationshipGraph from '../components/EvidenceRelationshipGraph';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+import { API_URL } from '../api/config';
 
 const Evidence = () => {
   const { authToken } = useAuth();
   const { caseId } = useParams();
   const navigate = useNavigate();
+  const [caseDetail, setCaseDetail] = useState(null);
   const [evidence, setEvidence] = useState([]);
   const [selectedEvidence, setSelectedEvidence] = useState(null);
+  const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showForm, setShowForm] = useState(false);
+  const [selectedPoint, setSelectedPoint] = useState(null);
   const [formData, setFormData] = useState({
     evidenceType: 'other',
+    itemName: '',
+    pinXPercent: '',
+    pinYPercent: '',
+    bagSerialNumber: '',
     description: '',
-    location: ''
+    collectedBy: ''
   });
 
+  const currentPhoto = caseDetail?.scenePhotos?.[selectedPhotoIndex] || { url: caseDetail?.sceneImageUrl, name: caseDetail?.sceneImageName };
+
   useEffect(() => {
-    loadEvidence();
-  }, [caseId]);
+    if (caseId && authToken) {
+      loadEvidence();
+      loadCaseDetail();
+    }
+  }, [caseId, authToken]);
 
   const loadEvidence = async () => {
     try {
@@ -45,8 +56,50 @@ const Evidence = () => {
     }
   };
 
+  const loadCaseDetail = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/cases/${caseId}`, {
+        headers: {
+          Authorization: `Bearer ${authToken}`
+        }
+      });
+
+      if (!response.ok) throw new Error('Failed to load case details');
+      const data = await response.json();
+      setCaseDetail(data);
+    } catch (err) {
+      console.error('Error loading case detail:', err);
+    }
+  };
+
+  const handleImageClick = (e) => {
+    if (!currentPhoto?.url) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    const xFixed = Number(x.toFixed(2));
+    const yFixed = Number(y.toFixed(2));
+
+    setSelectedPoint({ x: xFixed, y: yFixed });
+    setFormData(prev => ({
+      ...prev,
+      pinXPercent: xFixed,
+      pinYPercent: yFixed
+    }));
+    if (!showForm) setShowForm(true);
+  };
+
   const handleCreateEvidence = async (e) => {
     e.preventDefault();
+
+    const categoryMap = {
+      weapon: 'weapon',
+      dna: 'biological',
+      document: 'document',
+      photo: 'digital',
+      trace: 'trace',
+      other: 'other'
+    };
 
     try {
       const response = await fetch(`${API_URL}/api/evidence`, {
@@ -57,33 +110,48 @@ const Evidence = () => {
         },
         body: JSON.stringify({
           caseId,
-          ...formData
+          itemName: formData.itemName,
+          pinXPercent: Number(formData.pinXPercent),
+          pinYPercent: Number(formData.pinYPercent),
+          bagSerialNumber: formData.bagSerialNumber,
+          category: categoryMap[formData.evidenceType] || 'other',
+          description: formData.description,
+          collectedBy: formData.collectedBy,
+          photoId: currentPhoto?._id
         })
       });
 
-      if (!response.ok) throw new Error('Failed to create evidence');
+      if (!response.ok) {
+        const errorBody = await response.json().catch(() => null);
+        throw new Error(errorBody?.message || 'Failed to create evidence');
+      }
 
       const newEvidence = await response.json();
       setEvidence([newEvidence, ...evidence]);
       setFormData({
         evidenceType: 'other',
+        itemName: '',
+        pinXPercent: '',
+        pinYPercent: '',
+        bagSerialNumber: '',
         description: '',
-        location: ''
+        collectedBy: ''
       });
       setShowForm(false);
     } catch (err) {
       console.error('Error creating evidence:', err);
-      alert('Failed to create evidence');
+      alert(err.message || 'Failed to create evidence');
     }
   };
 
   const getTypeColor = (type) => {
     const colors = {
       'weapon': 'bg-red-500/10 border-red-500/30 text-red-300',
-      'dna': 'bg-purple-500/10 border-purple-500/30 text-purple-300',
+      'biological': 'bg-purple-500/10 border-purple-500/30 text-purple-300',
       'document': 'bg-blue-500/10 border-blue-500/30 text-blue-300',
-      'photo': 'bg-cyan-500/10 border-cyan-500/30 text-cyan-300',
+      'digital': 'bg-cyan-500/10 border-cyan-500/30 text-cyan-300',
       'trace': 'bg-yellow-500/10 border-yellow-500/30 text-yellow-300',
+      'impression': 'bg-indigo-500/10 border-indigo-500/30 text-indigo-300',
       'other': 'bg-gray-500/10 border-gray-500/30 text-gray-300'
     };
     return colors[type] || colors['other'];
@@ -92,24 +160,14 @@ const Evidence = () => {
   const getTypeIcon = (type) => {
     const icons = {
       'weapon': '🔫',
-      'dna': '🧬',
+      'biological': '🧬',
       'document': '📄',
-      'photo': '📸',
+      'digital': '📸',
       'trace': '🔍',
+      'impression': '🧾',
       'other': '📦'
     };
     return icons[type] || '📦';
-  };
-
-  const getStatusColor = (status) => {
-    const colors = {
-      'collected': 'bg-green-500/10 border-green-500/30 text-green-300',
-      'in-transit': 'bg-yellow-500/10 border-yellow-500/30 text-yellow-300',
-      'stored': 'bg-blue-500/10 border-blue-500/30 text-blue-300',
-      'analyzed': 'bg-purple-500/10 border-purple-500/30 text-purple-300',
-      'released': 'bg-gray-500/10 border-gray-500/30 text-gray-300'
-    };
-    return colors[status] || colors['collected'];
   };
 
   if (loading) {
@@ -160,6 +218,85 @@ const Evidence = () => {
         </div>
       </div>
 
+      {(caseDetail?.sceneImageUrl || caseDetail?.scenePhotos?.length > 0) && (
+        <div className="mb-8 bg-[#16171d] border border-[#2e303a] rounded-xl p-6 shadow-lg">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-xl font-semibold text-gray-100">Scene Photos</h2>
+              <p className="text-sm text-gray-400">Click any point on the image to capture X/Y coordinates for evidence.</p>
+            </div>
+            <div className="text-sm text-gray-300">
+              {selectedPoint ? (
+                <>{selectedPoint.x}% X, {selectedPoint.y}% Y</>
+              ) : (
+                'Click the photo to choose coordinates'
+              )}
+            </div>
+          </div>
+
+          {caseDetail?.scenePhotos?.length > 1 && (
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-300 mb-2">Select Photo</label>
+              <select
+                value={selectedPhotoIndex}
+                onChange={(e) => {
+                  setSelectedPhotoIndex(Number(e.target.value));
+                  setSelectedPoint(null);
+                }}
+                className="w-full bg-[#1f2028] border border-[#2e303a] rounded-lg px-4 py-2 text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#fbbf24]"
+              >
+                {caseDetail.scenePhotos.map((photo, idx) => (
+                  <option key={idx} value={idx}>
+                    Photo {idx + 1}: {photo.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          <div className="relative rounded-xl overflow-hidden border border-[#2e303a] bg-black">
+            <img
+              src={currentPhoto?.url}
+              alt={currentPhoto?.name || 'Scene photo'}
+              onClick={handleImageClick}
+              className="w-full h-auto cursor-crosshair object-contain"
+            />
+
+            {selectedPoint && (
+              <div
+                className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#fbbf24] bg-[#fbbf24]/40 shadow-xl"
+                style={{ left: `${selectedPoint.x}%`, top: `${selectedPoint.y}%`, width: '18px', height: '18px' }}
+              />
+            )}
+
+            {(() => {
+              const visibleEvidence = (caseDetail?.scenePhotos?.length > 0)
+                ? evidence.filter(ev => String(ev.photoId) === String(currentPhoto?._id))
+                : evidence;
+
+              return visibleEvidence.map((item, index) => (
+              <button
+                key={item._id}
+                type="button"
+                title={`${item.itemName} (${item.pinXPercent}%, ${item.pinYPercent}%)`}
+                onClick={() => setSelectedEvidence(item)}
+                className={`absolute -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/70 bg-white/80 text-xs font-bold text-black transition-transform hover:scale-110`}
+                style={{ left: `${item.pinXPercent}%`, top: `${item.pinYPercent}%`, width: '22px', height: '22px' }}
+              >
+                {item.pinNumber || index + 1}
+              </button>
+              ));
+            })()}
+          </div>
+        </div>
+      )}
+
+      {caseDetail && !caseDetail.sceneImageUrl && !caseDetail.scenePhotos?.length && (
+        <div className="mb-8 rounded-xl border border-yellow-500/30 bg-yellow-500/10 p-6 text-yellow-200">
+          This case has no scene photos uploaded. Add scene photos when creating the case to use image-based evidence pinning.
+        </div>
+      )}
+
       {/* Create Form */}
       {showForm && (
         <form onSubmit={handleCreateEvidence} className="mb-8 p-6 bg-[#16171d] border border-[#2e303a] rounded-xl">
@@ -184,39 +321,101 @@ const Evidence = () => {
 
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
-                Description
-              </label>
-              <input
-                type="text"
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="Brief description"
-                required
-                className="w-full bg-[#1f2028] border border-[#2e303a] rounded-lg px-4 py-3 text-gray-100 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-[#fbbf24]"
-              />
+                  Item Name
+                </label>
+                <input
+                  type="text"
+                  value={formData.itemName}
+                  onChange={(e) => setFormData({ ...formData, itemName: e.target.value })}
+                  placeholder="Evidence item name"
+                  required
+                  className="w-full bg-[#1f2028] border border-[#2e303a] rounded-lg px-4 py-3 text-gray-100 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-[#fbbf24]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Pin X (%)
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  max="100"
+                  value={formData.pinXPercent}
+                  onChange={(e) => setFormData({ ...formData, pinXPercent: e.target.value })}
+                  placeholder="0-100"
+                  required
+                  className="w-full bg-[#1f2028] border border-[#2e303a] rounded-lg px-4 py-3 text-gray-100 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-[#fbbf24]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Pin Y (%)
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  max="100"
+                  value={formData.pinYPercent}
+                  onChange={(e) => setFormData({ ...formData, pinYPercent: e.target.value })}
+                  placeholder="0-100"
+                  required
+                  className="w-full bg-[#1f2028] border border-[#2e303a] rounded-lg px-4 py-3 text-gray-100 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-[#fbbf24]"
+                />
+              </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Location
-              </label>
-              <input
-                type="text"
-                value={formData.location}
-                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                placeholder="Where it was found"
-                className="w-full bg-[#1f2028] border border-[#2e303a] rounded-lg px-4 py-3 text-gray-100 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-[#fbbf24]"
-              />
-            </div>
-          </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Bag Serial Number
+                </label>
+                <input
+                  type="text"
+                  value={formData.bagSerialNumber}
+                  onChange={(e) => setFormData({ ...formData, bagSerialNumber: e.target.value })}
+                  placeholder="Evidence bag ID"
+                  className="w-full bg-[#1f2028] border border-[#2e303a] rounded-lg px-4 py-3 text-gray-100 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-[#fbbf24]"
+                />
+              </div>
 
-          <button
-            type="submit"
-            className="w-full px-4 py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg transition-all"
-          >
-            Create Evidence
-          </button>
-        </form>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Collected By
+                </label>
+                <input
+                  type="text"
+                  value={formData.collectedBy}
+                  onChange={(e) => setFormData({ ...formData, collectedBy: e.target.value })}
+                  placeholder="Officer name"
+                  className="w-full bg-[#1f2028] border border-[#2e303a] rounded-lg px-4 py-3 text-gray-100 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-[#fbbf24]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Description
+                </label>
+                <input
+                  type="text"
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="Brief description"
+                  required
+                  className="w-full bg-[#1f2028] border border-[#2e303a] rounded-lg px-4 py-3 text-gray-100 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-[#fbbf24]"
+                />
+              </div>
+            </div>
+            <button
+              type="submit"
+              className="w-full px-4 py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg transition-all"
+            >
+              Create Evidence
+            </button>
+          </form>
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
@@ -237,11 +436,11 @@ const Evidence = () => {
                     }`}
                   >
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xl">{getTypeIcon(item.evidenceType)}</span>
-                      <span className="font-semibold text-gray-100 text-sm">{item.description.substring(0, 20)}...</span>
+                      <span className="text-xl">{getTypeIcon(item.category)}</span>
+                      <span className="font-semibold text-gray-100 text-sm">{item.itemName.substring(0, 20)}...</span>
                     </div>
-                    <div className={`inline-block px-2 py-1 rounded text-xs font-medium ${getStatusColor(item.status)}`}>
-                      {item.status}
+                    <div className={`inline-block px-2 py-1 rounded text-xs font-medium ${getTypeColor(item.category)}`}>
+                      {item.category}
                     </div>
                   </div>
                 ))
@@ -258,25 +457,33 @@ const Evidence = () => {
             <div className="space-y-6">
               <div className="bg-[#16171d] border border-[#2e303a] rounded-xl p-6 shadow-lg">
                 <div className="flex items-center gap-3 mb-4">
-                  <span className="text-4xl">{getTypeIcon(selectedEvidence.evidenceType)}</span>
+                  <span className="text-4xl">{getTypeIcon(selectedEvidence.category)}</span>
                   <div>
-                    <h2 className="text-2xl font-bold text-gray-100">{selectedEvidence.description}</h2>
-                    <div className={`inline-block px-3 py-1 rounded-md text-sm font-semibold mt-2 ${getTypeColor(selectedEvidence.evidenceType)}`}>
-                      {selectedEvidence.evidenceType.toUpperCase()}
+                    <h2 className="text-2xl font-bold text-gray-100">{selectedEvidence.itemName}</h2>
+                    <div className={`inline-block px-3 py-1 rounded-md text-sm font-semibold mt-2 ${getTypeColor(selectedEvidence.category)}`}>
+                      {selectedEvidence.category.toUpperCase()}
                     </div>
                   </div>
                 </div>
 
-                {selectedEvidence.location && (
+                {selectedEvidence.bagSerialNumber && (
                   <div className="mb-4 p-3 bg-[#1f2028] rounded-lg">
-                    <p className="text-sm text-gray-400">Location Found</p>
-                    <p className="text-gray-100">{selectedEvidence.location}</p>
+                    <p className="text-sm text-gray-400">Bag Serial Number</p>
+                    <p className="text-gray-100">{selectedEvidence.bagSerialNumber}</p>
                   </div>
                 )}
 
-                <div className={`inline-block px-3 py-1 rounded-md text-sm font-semibold ${getStatusColor(selectedEvidence.status)}`}>
-                  Status: {selectedEvidence.status}
+                <div className="mb-4 p-3 bg-[#1f2028] rounded-lg">
+                  <p className="text-sm text-gray-400">Collected By</p>
+                  <p className="text-gray-100">{selectedEvidence.collectedBy || 'Unknown'}</p>
                 </div>
+
+                {selectedEvidence.description && (
+                  <div className="mb-4 p-3 bg-[#1f2028] rounded-lg">
+                    <p className="text-sm text-gray-400">Description</p>
+                    <p className="text-gray-100">{selectedEvidence.description}</p>
+                  </div>
+                )}
               </div>
 
               {/* Chain of Custody */}

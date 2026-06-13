@@ -1,12 +1,13 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 import { API_URL } from '../api/config';
 
-const CreateCase = () => {
+const EditCase = () => {
   const navigate = useNavigate();
   const { authToken } = useAuth();
+  const { id } = useParams();
   const [formData, setFormData] = useState({
     title: '',
     location: '',
@@ -15,14 +16,8 @@ const CreateCase = () => {
     scenePhotos: []
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   const handleMultipleImageUpload = async (e) => {
     const files = Array.from(e.target.files || []);
@@ -55,13 +50,66 @@ const CreateCase = () => {
     }));
   };
 
+  useEffect(() => {
+    const loadCase = async () => {
+      if (!authToken) return;
+      try {
+        const response = await fetch(`${API_URL}/api/cases/${id}`, {
+          headers: {
+            Authorization: `Bearer ${authToken}`
+          }
+        });
+
+        if (!response.ok) {
+          if (response.status === 404) {
+            throw new Error('Case not found');
+          }
+          throw new Error('Unable to load case details');
+        }
+
+        const caseData = await response.json();
+        const existingScenePhotos = Array.isArray(caseData.scenePhotos) && caseData.scenePhotos.length > 0
+          ? caseData.scenePhotos
+          : caseData.sceneImageUrl
+            ? [{
+                name: caseData.sceneImageName || 'Scene photo',
+                url: caseData.sceneImageUrl
+              }]
+            : [];
+
+        setFormData({
+          title: caseData.title,
+          location: caseData.location,
+          description: caseData.description || '',
+          priority: caseData.priority || 'medium',
+          scenePhotos: existingScenePhotos
+        });
+      } catch (err) {
+        console.error('Load case error:', err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadCase();
+  }, [id, authToken]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     try {
-      const response = await fetch(`${API_URL}/api/cases`, {
-        method: 'POST',
+      const response = await fetch(`${API_URL}/api/cases/${id}`, {
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${authToken}`
@@ -78,28 +126,52 @@ const CreateCase = () => {
       });
 
       if (!response.ok) {
-        throw new Error('Unable to create case');
+        throw new Error('Unable to update case');
       }
 
-      navigate('/cases');
+      navigate(`/cases/${id}`);
     } catch (error) {
-      console.error('Create case error:', error);
-      alert('Unable to create case. Please try again.');
+      console.error('Update case error:', error);
+      alert('Unable to update case. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  if (loading) {
+    return (
+      <div className="py-10 px-5 max-w-4xl mx-auto text-gray-300">
+        <p className="text-xl font-medium">Loading case details...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="py-10 px-5 max-w-4xl mx-auto">
+        <div className="mb-6 rounded-xl border border-red-500/30 bg-red-500/10 p-6 text-red-300">
+          {error}
+        </div>
+        <button
+          onClick={() => navigate(-1)}
+          className="px-5 py-3 bg-[#1f2028] text-gray-300 rounded-lg hover:bg-[#2e303a] transition-all"
+        >
+          Back
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="py-10 px-5 max-w-4xl mx-auto">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-100 mb-2">Create New Case</h1>
-        <p className="text-gray-400">Document a new crime scene investigation</p>
+        <h1 className="text-3xl font-bold text-gray-100 mb-2">Edit Case</h1>
+        <p className="text-gray-400">Update the case information</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Case Title */}
+        {/* Case Information */}
         <div className="bg-[#16171d] border border-[#2e303a] rounded-xl p-6">
           <h2 className="text-lg font-semibold text-gray-100 mb-4">Case Information</h2>
           
@@ -154,6 +226,41 @@ const CreateCase = () => {
             </div>
 
             <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Scene Photos
+              </label>
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handleMultipleImageUpload}
+                className="w-full text-gray-100"
+              />
+            </div>
+
+            {formData.scenePhotos.length > 0 && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                {formData.scenePhotos.map((photo, index) => (
+                  <div key={`${photo.name}-${index}`} className="relative rounded-xl overflow-hidden border border-[#2e303a] bg-[#0f1117]">
+                    <img src={photo.url} alt={photo.name} className="h-48 w-full object-cover" />
+                    <div className="absolute inset-0 bg-black/20 flex items-start justify-end p-2">
+                      <button
+                        type="button"
+                        onClick={() => removePhoto(index)}
+                        className="rounded-full bg-red-500/90 px-3 py-1 text-xs font-semibold text-white hover:bg-red-600"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                    <div className="p-3 bg-[#16171d] text-sm text-gray-300">
+                      <p className="truncate">Photo {index + 1}: {photo.name}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div>
               <label htmlFor="description" className="block text-sm font-medium text-gray-300 mb-2">
                 Description
               </label>
@@ -162,98 +269,29 @@ const CreateCase = () => {
                 name="description"
                 value={formData.description}
                 onChange={handleChange}
-                placeholder="Describe the incident and initial observations..."
-                rows={4}
+                placeholder="Add case details, notes, or observations..."
+                rows="6"
                 className="w-full bg-[#1f2028] border border-[#2e303a] rounded-lg px-4 py-3 text-gray-100 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-[#fbbf24] transition-all resize-none"
               />
             </div>
           </div>
         </div>
 
-        {/* Scene Photos Upload */}
-        <div className="bg-[#16171d] border border-[#2e303a] rounded-xl p-6">
-          <h2 className="text-lg font-semibold text-gray-100 mb-4">Scene Photos</h2>
-          <p className="text-sm text-gray-400 mb-4">Upload multiple photos of the crime scene for evidence annotation</p>
-          
-          <div className="border-2 border-dashed border-[#2e303a] rounded-xl p-8 text-center hover:border-[#fbbf24]/50 transition-all mb-4">
-            <div className="space-y-3">
-              <div className="text-5xl">📁</div>
-              <div>
-                <label htmlFor="scenePhotos" className="cursor-pointer">
-                  <span className="text-[#fbbf24] hover:text-[#f59e0b] font-medium">Click to upload</span>
-                  <span className="text-gray-400"> or drag and drop</span>
-                </label>
-                <input
-                  id="scenePhotos"
-                  name="scenePhotos"
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={handleMultipleImageUpload}
-                  className="hidden"
-                />
-              </div>
-              <p className="text-sm text-gray-500">PNG, JPG up to 10MB each</p>
-            </div>
-          </div>
-
-          {formData.scenePhotos.length > 0 && (
-            <div className="space-y-3">
-              <p className="text-sm text-gray-300">{formData.scenePhotos.length} photo{formData.scenePhotos.length !== 1 ? 's' : ''} uploaded</p>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {formData.scenePhotos.map((photo, index) => (
-                  <div key={index} className="relative group">
-                    <img
-                      src={photo.url}
-                      alt={`Scene ${index + 1}`}
-                      className="w-full h-40 object-cover rounded-lg border border-[#2e303a]"
-                    />
-                    <div className="absolute inset-0 bg-black/60 rounded-lg opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center">
-                      <button
-                        type="button"
-                        onClick={() => removePhoto(index)}
-                        className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-sm font-medium rounded"
-                      >
-                        Remove
-                      </button>
-                    </div>
-                    <div className="absolute top-2 left-2 bg-[#fbbf24] text-[#0a0b0f] text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center">
-                      {index + 1}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-
         {/* Action Buttons */}
-        <div className="flex gap-4">
+        <div className="flex gap-3 justify-end">
           <button
             type="button"
-            onClick={() => navigate('/cases')}
-            className="flex-1 px-6 py-3 bg-[#1f2028] hover:bg-[#2e303a] text-gray-300 font-medium rounded-lg transition-all"
+            onClick={() => navigate(-1)}
+            className="px-6 py-3 bg-[#1f2028] text-gray-300 rounded-lg hover:bg-[#2e303a] transition-all font-semibold"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={isSubmitting}
-            className="flex-1 px-6 py-3 bg-[#fbbf24] hover:bg-[#f59e0b] text-[#0a0b0f] font-semibold rounded-lg transition-all disabled:opacity-60 flex items-center justify-center gap-2 shadow-lg"
+            className="px-6 py-3 bg-[#fbbf24] hover:bg-[#f59e0b] disabled:bg-gray-500 text-[#0a0b0f] rounded-lg transition-all font-semibold disabled:cursor-not-allowed"
           >
-            {isSubmitting ? (
-              <>
-                <div className="w-5 h-5 border-2 border-[#0a0b0f] border-t-transparent rounded-full animate-spin" />
-                Creating Case...
-              </>
-            ) : (
-              <>
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                  <path d="M16 10L14 8M14 8L12 6M14 8H7M7 8C7 9.06087 6.57857 10.0783 5.82843 10.8284C5.07828 11.5786 4.06087 12 3 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                </svg>
-                Create Case
-              </>
-            )}
+            {isSubmitting ? 'Updating...' : 'Update Case'}
           </button>
         </div>
       </form>
@@ -261,4 +299,4 @@ const CreateCase = () => {
   );
 };
 
-export default CreateCase;
+export default EditCase;
