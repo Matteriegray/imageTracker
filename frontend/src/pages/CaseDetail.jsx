@@ -36,6 +36,30 @@ const CaseDetail = () => {
     }
   };
 
+  const reopenCase = async () => {
+    if (!caseDetail?._id) return;
+    try {
+      const response = await fetch(`${API_URL}/api/cases/${caseDetail._id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${authToken}`
+        },
+        body: JSON.stringify({ status: 'active' })
+      });
+
+      if (!response.ok) {
+        throw new Error('Unable to reopen case');
+      }
+
+      const updatedCase = await response.json();
+      setCaseDetail(updatedCase);
+    } catch (err) {
+      console.error('Reopen case error:', err);
+      alert('Unable to reopen case. Please try again.');
+    }
+  };
+
   useEffect(() => {
     const loadCase = async () => {
       if (!authToken) return;
@@ -108,6 +132,14 @@ const CaseDetail = () => {
               className="px-5 py-3 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg transition-all"
             >
               Close Case
+            </button>
+          )}
+          {caseDetail?.status === 'closed' && (
+            <button
+              onClick={reopenCase}
+              className="px-5 py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg transition-all"
+            >
+              Reopen Case
             </button>
           )}
           <button
