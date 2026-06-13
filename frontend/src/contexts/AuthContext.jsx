@@ -53,7 +53,7 @@ export const AuthProvider = ({ children }) => {
       console.error('Login error:', error);
       return { 
         success: false, 
-        message: 'Unable to connect to the server. Please check if the backend is running on port 4000.' 
+        message: 'Unable to connect to the server. Please check if the backend is running on port 5000.' 
       };
     }
   };
@@ -92,7 +92,7 @@ export const AuthProvider = ({ children }) => {
       console.error('Signup error:', error);
       return { 
         success: false, 
-        message: 'Unable to connect to the server. Please check if the backend is running on port 4000.' 
+        message: 'Unable to connect to the server. Please check if the backend is running on port 5000.' 
       };
     }
   };
