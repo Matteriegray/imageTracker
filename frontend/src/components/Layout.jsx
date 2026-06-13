@@ -36,12 +36,26 @@ const Layout = () => {
             >
               Dashboard
             </Link>
-            <a href="#" className="px-4 py-2 text-gray-400 hover:bg-[#1f2028] hover:text-gray-300 rounded-lg font-medium transition-all">
+            <Link
+              to="/cases"
+              className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                location.pathname.startsWith('/cases')
+                  ? 'bg-[#fbbf24]/10 text-[#fbbf24]'
+                  : 'text-gray-400 hover:bg-[#1f2028] hover:text-gray-300'
+              }`}
+            >
               Cases
-            </a>
-            <a href="#" className="px-4 py-2 text-gray-400 hover:bg-[#1f2028] hover:text-gray-300 rounded-lg font-medium transition-all">
+            </Link>
+            <Link
+              to="/timeline"
+              className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                location.pathname === '/timeline'
+                  ? 'bg-[#fbbf24]/10 text-[#fbbf24]'
+                  : 'text-gray-400 hover:bg-[#1f2028] hover:text-gray-300'
+              }`}
+            >
               Timeline
-            </a>
+            </Link>
           </nav>
 
           {/* User Info & Logout */}

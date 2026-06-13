@@ -3,6 +3,9 @@ import { AuthProvider } from './contexts/AuthContext';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
+import Cases from './pages/Cases';
+import CreateCase from './pages/CreateCase';
+import Timeline from './pages/Timeline';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -23,6 +26,9 @@ function App() {
           >
             <Route index element={<Navigate to="/dashboard" replace />} />
             <Route path="dashboard" element={<Dashboard />} />
+            <Route path="cases" element={<Cases />} />
+            <Route path="cases/new" element={<CreateCase />} />
+            <Route path="timeline" element={<Timeline />} />
           </Route>
         </Routes>
       </BrowserRouter>
